@@ -1,4 +1,4 @@
-This is an iOS Redis client written in Swift.
+This is a preliminary version of an iOS Redis client written in Swift.
 
 To understand high-level usage: check the Unit Tests for usage of the  RedisInterface() class.
 To understand internals and learn how to extend this:  examine the Unit Tests for the lower-level classes (RedisConnection, RedisCommand, RedisParser, etc.)
