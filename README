@@ -1,0 +1,20 @@
+This is an iOS Redis client written in Swift.
+
+To understand high-level usage: check the Unit Tests for usage of the  RedisInterface() class.
+To understand internals and learn how to extend this:  examine the Unit Tests for the lower-level classes (RedisConnection, RedisCommand, RedisParser, etc.)
+ 
+Note that in order to run the unit tests, you'll need to specifiy host/port/auth details in the ConnectionParams class.
+
+Currently supports the following:
+* Asynchronous operation 
+* Basic commands:  GET, SET, AUTH
+* PubSub commands: PUBLISH, SUBSCRIBE
+* Mechanism to extend with more commands
+* Provides a RedisResponse class which encapsulates possible responses from Redis:  String, Int, Data (BulkString), Error, Array
+
+Blatanly missing:
+* Error checking still needs work.  
+* Source code definitely needs more documentation
+* SSL connectivity not tested.
+* A single RedisInterface object can only subscribe to a single channel (workaround: use two RedisInterface objects)
+ 
