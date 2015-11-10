@@ -13,7 +13,7 @@ import Foundation
 // To run the unit tests:
 //
 // 1. Rename the class ConnectionParamsExample to ConnectionParams
-// 2. Save a copy of this file as ConnectionParams.swift  (it is in the .gitignore file)
+// 2. Save a copy of this file as ../../ConnectionParams.swift
 // 3. Put the real connection parameters in ConnectionParams.swift
 // 4. Run the unit tests
 //
