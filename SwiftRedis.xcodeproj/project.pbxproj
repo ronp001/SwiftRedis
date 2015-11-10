@@ -20,7 +20,7 @@
 		E49804EC1BF0727D003D5539 /* RedisResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49804E51BF0727D003D5539 /* RedisResponse.swift */; };
 		E49804ED1BF0727D003D5539 /* RedisResponseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49804E61BF0727D003D5539 /* RedisResponseParser.swift */; };
 		E49804F01BF072EB003D5539 /* ConnectionParams-example.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49804EF1BF072EB003D5539 /* ConnectionParams-example.swift */; };
-		E49804F81BF19427003D5539 /* ConnectionParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49804F71BF19427003D5539 /* ConnectionParams.swift */; };
+		E49804FB1BF19774003D5539 /* ConnectionParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49804FA1BF19774003D5539 /* ConnectionParams.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,7 +51,7 @@
 		E49804E51BF0727D003D5539 /* RedisResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedisResponse.swift; sourceTree = "<group>"; };
 		E49804E61BF0727D003D5539 /* RedisResponseParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedisResponseParser.swift; sourceTree = "<group>"; };
 		E49804EF1BF072EB003D5539 /* ConnectionParams-example.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ConnectionParams-example.swift"; sourceTree = "<group>"; };
-		E49804F71BF19427003D5539 /* ConnectionParams.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConnectionParams.swift; sourceTree = "<group>"; };
+		E49804FA1BF19774003D5539 /* ConnectionParams.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ConnectionParams.swift; path = ../../ConnectionParams.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,7 +112,7 @@
 		E49804D51BF07248003D5539 /* SwiftRedisTests */ = {
 			isa = PBXGroup;
 			children = (
-				E49804F71BF19427003D5539 /* ConnectionParams.swift */,
+				E49804FA1BF19774003D5539 /* ConnectionParams.swift */,
 				E49804D61BF07248003D5539 /* SwiftRedisTests.swift */,
 				E49804EF1BF072EB003D5539 /* ConnectionParams-example.swift */,
 				E49804D81BF07248003D5539 /* Info.plist */,
@@ -239,7 +239,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E49804D71BF07248003D5539 /* SwiftRedisTests.swift in Sources */,
-				E49804F81BF19427003D5539 /* ConnectionParams.swift in Sources */,
+				E49804FB1BF19774003D5539 /* ConnectionParams.swift in Sources */,
 				E49804F01BF072EB003D5539 /* ConnectionParams-example.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
