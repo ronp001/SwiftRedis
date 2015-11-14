@@ -390,12 +390,21 @@ class RedisParserTests: XCTestCase {
         class ParserDelegateForTestingAbort : RedisResponseParserDelegate {
             var errorReported = false
             var responseReported = false
+            var abortReported = false
             
             func errorParsingResponse(error: String?) {
                 errorReported = true
             }
+            func parseOperationAborted() {
+                abortReported = true
+            }
             func receivedResponse(response: RedisResponse) {
                 responseReported = true
+            }
+            func reset() {
+                errorReported = false
+                abortReported = false
+                responseReported = false
             }
         }
         let d = ParserDelegateForTestingAbort()
@@ -409,12 +418,11 @@ class RedisParserTests: XCTestCase {
         XCTAssertEqual(parser.haveResponse, false)
         parser.abortParsing()
         
-        XCTAssertTrue(d.errorReported, "Parser should report an abort to delegate")
+        XCTAssertFalse(d.errorReported, "Parser should not report an error to delegate")
+        XCTAssertTrue(d.abortReported, "Parser should report an abort to delegate")
         XCTAssertFalse(d.responseReported, "Parser should not report a response to delegate")
         
-        d.errorReported = false
-        d.responseReported = false
- 
+        d.reset()
         
         /// ensure can now process a full array
         parser.storeReceivedString("*3\r\n+subscribe\r\n+ev1\r\n:1\r\n")
@@ -427,29 +435,30 @@ class RedisParserTests: XCTestCase {
                 ]))
         }
         
-        XCTAssertFalse(d.errorReported, "Parser should not report an abort to delegate")
+        XCTAssertFalse(d.errorReported, "Parser should not report an error to delegate")
+        XCTAssertFalse(d.abortReported, "Parser should not report an abort to delegate")
         XCTAssertTrue(d.responseReported, "Parser should report a response to delegate")
 
     
         // in the middle of processing an array
-        d.errorReported = false
-        d.responseReported = false
+        d.reset()
         parser.storeReceivedString("*4\r\n+sub\r\n")
         XCTAssertEqual(parser.haveResponse, false)
         parser.abortParsing()
         
-        XCTAssertTrue(d.errorReported, "Parser should report an abort to delegate")
+        XCTAssertFalse(d.errorReported, "Parser should not report an error to delegate")
+        XCTAssertTrue(d.abortReported, "Parser should report an abort to delegate")
         XCTAssertFalse(d.responseReported, "Parser should not report a response to delegate")
         
         
         // in the middle of processing a string
-        d.errorReported = false
-        d.responseReported = false
+        d.reset()
         parser.storeReceivedString("+sub")
         XCTAssertEqual(parser.haveResponse, false)
         parser.abortParsing()
         
-        XCTAssertTrue(d.errorReported, "Parser should report an abort to delegate")
+        XCTAssertFalse(d.errorReported, "Parser should not report an error to delegate")
+        XCTAssertTrue(d.abortReported, "Parser should report an abort to delegate")
         XCTAssertFalse(d.responseReported, "Parser should not report a response to delegate")
     
     }

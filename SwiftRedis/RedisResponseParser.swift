@@ -12,6 +12,7 @@ import Foundation
 protocol RedisResponseParserDelegate {
     func errorParsingResponse(error: String?)
     func receivedResponse(response: RedisResponse)
+    func parseOperationAborted()
 }
 
 
@@ -49,6 +50,10 @@ class RedisResponseParser: RedisResponseParserDelegate
         self.delegate?.errorParsingResponse(message)
     }
     
+    func aborted() {
+        self.delegate?.parseOperationAborted()
+    }
+    
     
     // MARK: Array processing
     var subParser: RedisResponseParser? = nil
@@ -74,12 +79,16 @@ class RedisResponseParser: RedisResponseParserDelegate
         
         if arrayElementsLeft == 0 {
             detachSubParser()
-            finishProcessing(true, errorMessage: nil)
+            finishProcessing(.Success, errorMessage: nil)
         }
     }
     
     func errorParsingResponse(error: String?) {
-        finishProcessing(false, errorMessage: error)
+        finishProcessing(.Failure, errorMessage: error)
+    }
+    
+    func parseOperationAborted() {
+        finishProcessing(.Aborted, errorMessage: "Aborted")
     }
     
     
@@ -192,24 +201,29 @@ class RedisResponseParser: RedisResponseParserDelegate
                 
                 if success == nil { return false }
 
-                finishProcessing(success!, errorMessage: nil)
+                finishProcessing(success! ? .Success : .Failure, errorMessage: nil)
             }
         }
         return true
     }
     
-    func finishProcessing(success: Bool, errorMessage: String?)
+    enum ParseOperationCompletionStatus { case Success, Failure, Aborted }
+    
+    func finishProcessing(status: ParseOperationCompletionStatus, errorMessage: String?)
     {
         processingComplete = true
         parserState = .Idle
         
         // inform the delegate that the read operation was completed.
         // note:  when the delegate is called, it might initiate a recursive call to this function!
-        if success == true {
+        switch status {
+        case .Success:
             self._haveResponse = true
             self.delegate?.receivedResponse(response!)
-        } else {
+        case .Failure:
             self.delegate?.errorParsingResponse(errorMessage)
+        case .Aborted:
+            self.delegate?.parseOperationAborted()
         }
     }
     
@@ -224,7 +238,7 @@ class RedisResponseParser: RedisResponseParserDelegate
         response = nil
         _haveResponse = false
         parserState = .Idle
-        error("Aborted")
+        aborted()
     }
     
     

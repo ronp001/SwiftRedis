@@ -233,6 +233,10 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
         delegate?.connectionError(message)
     }
     
+    func parseOperationAborted() {
+        print("RedisConnection: parse operation aborted")
+    }
+    
     func receivedResponse(response: RedisResponse) {
         if let cmd = pendingCommand {
             if cmd.finishWhenResponseReceived {
