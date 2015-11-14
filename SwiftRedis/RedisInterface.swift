@@ -30,6 +30,11 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
         c.connect()
     }
     
+    func disconnect()
+    {
+        c.disconnect()
+    }
+    
     func addCommandToQueue(command: RedisCommand)
     {
         commandQueue.append(command)

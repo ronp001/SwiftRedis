@@ -206,6 +206,45 @@ class RedisConnectionTests: XCTestCase {
         
     }
     
+    func testDisconnect()
+    {
+        let r = RedisConnection(serverAddress: ConnectionParams.serverAddress, serverPort: ConnectionParams.serverPort)
+        r.connect()
+        
+        // test that it works once
+        let storedExpectation1 = expectationWithDescription("set command handler activated")
+        let cmd = RedisCommand.Auth(ConnectionParams.auth, handler: { success, cmd in
+            XCTAssertTrue(success, "auth command expected to succeed")
+            XCTAssert(cmd.response! == RedisResponse(stringVal: "OK"), "expecting response from Redis to be OK")
+            storedExpectation1.fulfill()
+        })
+        
+        r.setPendingCommand(cmd)
+        
+        waitForExpectationsWithTimeout(2, handler: { error in
+            XCTAssertNil(error, "Error")
+        })
+        
+        
+        r.disconnect()
+        r.connect()
+        
+        // test that it works again
+        let storedExpectation2 = expectationWithDescription("set command handler activated second time")
+        let cmd2 = RedisCommand.Auth(ConnectionParams.auth, handler: { success, cmd in
+            XCTAssertTrue(success, "auth command expected to succeed again")
+            XCTAssert(cmd.response! == RedisResponse(stringVal: "OK"), "expecting second response from Redis to be OK")
+            storedExpectation2.fulfill()
+        })
+        
+        r.setPendingCommand(cmd2)
+        
+        waitForExpectationsWithTimeout(2, handler: { error in
+            XCTAssertNil(error, "Error")
+        })
+        
+    }
+    
     func testSavingDataWithoutAuthentication()
     {
         let r = RedisConnection(serverAddress: ConnectionParams.serverAddress, serverPort: ConnectionParams.serverPort)
@@ -342,6 +381,77 @@ class RedisParserTests: XCTestCase {
                 ]))
         }
         
+    }
+    
+    
+    func testAbortWhileParsing()
+    {
+        // this class allows us to test whether the parser correctly reports the abort to its delegate
+        class ParserDelegateForTestingAbort : RedisResponseParserDelegate {
+            var errorReported = false
+            var responseReported = false
+            
+            func errorParsingResponse(error: String?) {
+                errorReported = true
+            }
+            func receivedResponse(response: RedisResponse) {
+                responseReported = true
+            }
+        }
+        let d = ParserDelegateForTestingAbort()
+        
+        let parser = RedisResponseParser()
+        parser.setDelegate(d)
+
+        
+        // in the middle of processing an array element
+        parser.storeReceivedString("*4\r\n+sub")
+        XCTAssertEqual(parser.haveResponse, false)
+        parser.abortParsing()
+        
+        XCTAssertTrue(d.errorReported, "Parser should report an abort to delegate")
+        XCTAssertFalse(d.responseReported, "Parser should not report a response to delegate")
+        
+        d.errorReported = false
+        d.responseReported = false
+ 
+        
+        /// ensure can now process a full array
+        parser.storeReceivedString("*3\r\n+subscribe\r\n+ev1\r\n:1\r\n")
+        XCTAssertEqual(parser.haveResponse, true)
+        if parser.haveResponse {
+            XCTAssert(parser.lastResponse! == RedisResponse(arrayVal: [
+                RedisResponse(stringVal: "subscribe"),
+                RedisResponse(stringVal: "ev1"),
+                RedisResponse(intVal: 1)
+                ]))
+        }
+        
+        XCTAssertFalse(d.errorReported, "Parser should not report an abort to delegate")
+        XCTAssertTrue(d.responseReported, "Parser should report a response to delegate")
+
+    
+        // in the middle of processing an array
+        d.errorReported = false
+        d.responseReported = false
+        parser.storeReceivedString("*4\r\n+sub\r\n")
+        XCTAssertEqual(parser.haveResponse, false)
+        parser.abortParsing()
+        
+        XCTAssertTrue(d.errorReported, "Parser should report an abort to delegate")
+        XCTAssertFalse(d.responseReported, "Parser should not report a response to delegate")
+        
+        
+        // in the middle of processing a string
+        d.errorReported = false
+        d.responseReported = false
+        parser.storeReceivedString("+sub")
+        XCTAssertEqual(parser.haveResponse, false)
+        parser.abortParsing()
+        
+        XCTAssertTrue(d.errorReported, "Parser should report an abort to delegate")
+        XCTAssertFalse(d.responseReported, "Parser should not report a response to delegate")
+    
     }
     
     func testErrorHandling()

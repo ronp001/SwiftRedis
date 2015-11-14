@@ -12,6 +12,11 @@ class RedisBuffer
 {
     var dataAccumulatedFromStream: NSData?
     
+    func clear()
+    {
+        dataAccumulatedFromStream = nil
+    }
+    
     func restoreRemovedData(dataToRestore: NSData) {
         if dataAccumulatedFromStream == nil {
             dataAccumulatedFromStream = dataToRestore

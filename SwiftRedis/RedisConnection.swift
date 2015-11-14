@@ -80,6 +80,13 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
             print("closed output stream. status is now: \(statusOfStreamAsString(outputStream))")
             outputStream = nil
         }
+/*
+        if pendingCommand != nil {
+            pendingCommand!.completionFailed()
+            pendingCommand = nil
+        }
+*/        
+        responseParser.abortParsing()
     }
     
     deinit {
@@ -218,8 +225,12 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
     }
 
     // MARK: Response Parser Delegate
-    func errorParsingResponse(error: String) {
-        delegate?.connectionError("Could not understand response received")
+    func errorParsingResponse(error: String?) {
+        var message = "Could not parse response received"
+        if error != nil {
+            message += "(" + error! + ")"
+        }
+        delegate?.connectionError(message)
     }
     
     func receivedResponse(response: RedisResponse) {

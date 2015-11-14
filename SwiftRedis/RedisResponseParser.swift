@@ -10,7 +10,7 @@ import Foundation
 
 
 protocol RedisResponseParserDelegate {
-    func errorParsingResponse(error: String)
+    func errorParsingResponse(error: String?)
     func receivedResponse(response: RedisResponse)
 }
 
@@ -37,8 +37,6 @@ class RedisResponseParser: RedisResponseParserDelegate
     }
     
 
-    
-    
     // MARK: Calling the Delegate
     var delegate: RedisResponseParserDelegate?
     
@@ -47,7 +45,7 @@ class RedisResponseParser: RedisResponseParserDelegate
         self.delegate = delegate
     }
     
-    func error(message: String) {
+    func error(message: String?) {
         self.delegate?.errorParsingResponse(message)
     }
     
@@ -76,12 +74,12 @@ class RedisResponseParser: RedisResponseParserDelegate
         
         if arrayElementsLeft == 0 {
             detachSubParser()
-            finishProcessing(true)
+            finishProcessing(true, errorMessage: nil)
         }
     }
     
-    func errorParsingResponse(error: String) {
-        finishProcessing(false)
+    func errorParsingResponse(error: String?) {
+        finishProcessing(false, errorMessage: error)
     }
     
     
@@ -98,10 +96,8 @@ class RedisResponseParser: RedisResponseParserDelegate
     
     var processingComplete = false
     
-    // this function should be called only when the buffer (dataAccumulatedFromStream) has been
-    // filled exactly with the expected number of bytes.
-    // if expectingNumOfBytes is nil: the buffer should include a CRLF exactly at the end
-    func processAccumulatedData()
+    // function returns true if managed to complete processing, false otherwise
+    func processAccumulatedData() -> Bool
     {
         processingComplete = false
         
@@ -113,7 +109,7 @@ class RedisResponseParser: RedisResponseParserDelegate
                 self._haveResponse = false
                 
                 let typeChar = redisBuffer.getNextStringOfSize(1)
-                if typeChar == nil { return }
+                if typeChar == nil { return false }
                 
                 print("read type char: '\(typeChar)'")
                 switch typeChar! as String {
@@ -150,14 +146,14 @@ class RedisResponseParser: RedisResponseParserDelegate
             case .WaitingForSizeIndicator:
                 let sizeStr = redisBuffer.getNextStringUntilCRLF()
                 
-                if sizeStr == nil { return }
+                if sizeStr == nil { return false }
                 
                 let size = Int(sizeStr!)
                 
                 if size == nil {
                     error("Expected size indicator.  Received \(sizeStr)")
                     parserState = .WaitingForTypeIndicator
-                    return
+                    return false
                 }
                 
                 expectingNumOfBytes = size
@@ -166,13 +162,13 @@ class RedisResponseParser: RedisResponseParserDelegate
 
             case .WaitingForArrayElementCount:
                 let sizeStr = redisBuffer.getNextStringUntilCRLF()
-                if sizeStr == nil { return }
+                if sizeStr == nil { return false }
                 let size = Int(sizeStr!)
                 
                 if size == nil {
                     error("Expected size indicator.  Received \(sizeStr)")
                     parserState = .WaitingForTypeIndicator
-                    return
+                    return false
                 }
                 arrayElementsLeft = size!
                 print("Expecting \(size) elements in array")
@@ -187,19 +183,22 @@ class RedisResponseParser: RedisResponseParserDelegate
                 }
                 
                 // the following call will activate the delegate functions (receivedResponse or errorParsing Response) when complete
-                subParser?.processAccumulatedData()
+                let subParserSuccess = subParser!.processAccumulatedData()
+                
+                if !subParserSuccess { return false }
                 
             case .WaitingForData:
                 let success = response!.readValueFromBuffer(redisBuffer, numBytes: expectingNumOfBytes)
                 
-                if success == nil { return }
+                if success == nil { return false }
 
-                finishProcessing(success!)
+                finishProcessing(success!, errorMessage: nil)
             }
         }
+        return true
     }
     
-    func finishProcessing(success: Bool)
+    func finishProcessing(success: Bool, errorMessage: String?)
     {
         processingComplete = true
         parserState = .Idle
@@ -210,9 +209,24 @@ class RedisResponseParser: RedisResponseParserDelegate
             self._haveResponse = true
             self.delegate?.receivedResponse(response!)
         } else {
-            self.delegate?.errorParsingResponse(response!.parseErrorMsg!)
+            self.delegate?.errorParsingResponse(errorMessage)
         }
     }
+    
+    // MARK:  Aborting
+    func abortParsing()
+    {
+        if subParser != nil {
+            subParser?.abortParsing()
+            subParser = nil
+        }
+        redisBuffer.clear()
+        response = nil
+        _haveResponse = false
+        parserState = .Idle
+        error("Aborted")
+    }
+    
     
     
     // MARK: Reading from stream
