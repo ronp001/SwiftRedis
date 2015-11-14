@@ -80,12 +80,12 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
             print("closed output stream. status is now: \(statusOfStreamAsString(outputStream))")
             outputStream = nil
         }
-/*
+
         if pendingCommand != nil {
             pendingCommand!.completionFailed()
             pendingCommand = nil
         }
-*/        
+
         responseParser.abortParsing()
     }
     
