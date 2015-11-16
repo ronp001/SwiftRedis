@@ -67,6 +67,17 @@ class RedisInterfaceTests: XCTestCase
             XCTAssertNil(error, "Error")
         })
         
+        
+        let storedExpectation5 = expectationWithDescription("quit complete")
+        r.quit({ success in
+            storedExpectation5.fulfill()
+        })
+        waitForExpectationsWithTimeout(5, handler: { error in
+            XCTAssertNil(error, "Error")
+        })
+        
+        
+        
     }
     
     

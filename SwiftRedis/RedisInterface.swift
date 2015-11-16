@@ -20,6 +20,11 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
         self.auth = auth
     }
     
+    deinit
+    {
+        disconnect()
+    }
+    
     var commandQueue = [RedisCommand]()
     var currentCommand: RedisCommand? = nil
     var isConnected = false
@@ -32,6 +37,7 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
     
     func disconnect()
     {
+        commandQueue.removeAll()
         c.disconnect()
     }
     
@@ -64,9 +70,8 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
     // MARK: RedisConnectionDelegate functions
     
     func connectionError(error: String) {
-        print("RedisInterface: reconnecting due to connection error \(error)")
-        c.disconnect()
-        c.connect()
+        print("RedisInterface: connection error \(error)")
+        isConnected = false
     }
 
     func connected()
@@ -113,6 +118,11 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
     func publish(channel: String, value: String, completionHandler: RedisCommand.ValueCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Publish(channel, value: value, handler: completionHandler))
+    }
+    
+    func quit(completionHandler: RedisCommand.VoidCompletionHandler? )
+    {
+        addCommandToQueue(RedisCommand.Quit(completionHandler))
     }
     
 }

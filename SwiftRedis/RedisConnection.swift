@@ -73,12 +73,12 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
         if inputStream != nil {
             inputStream!.close()
             print("closed input stream. status is now: \(statusOfStreamAsString(inputStream))")
-            inputStream = nil
+            //inputStream = nil
         }
         if outputStream != nil {
             outputStream!.close()
             print("closed output stream. status is now: \(statusOfStreamAsString(outputStream))")
-            outputStream = nil
+            //outputStream = nil
         }
 
         if pendingCommand != nil {
@@ -147,14 +147,14 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
     }
 
     
-    func readData(maxBytes: Int = 128) -> NSData?
+    func readData(maxBytes: Int = 1024) -> NSData?
     {
         let data = NSMutableData(length: maxBytes)!
         
         print("readData: reading up to \(maxBytes) from stream")
         let length = inputStream?.read(UnsafeMutablePointer<UInt8>(data.mutableBytes), maxLength: maxBytes)
         print("readData: read \(length) bytes")
-        if length == nil {
+        if length == nil || length < 0 {
             return nil
         }
         

@@ -21,7 +21,7 @@ class RedisCommand : CustomStringConvertible
         return "RedisCommand(\(commandType))"
     }
     
-    enum Type { case Get, Set, Auth, Publish, Subscribe }
+    enum Type { case Get, Set, Auth, Publish, Subscribe, Quit }
     typealias ValueCompletionHandler = (success: Bool, key: String, result: RedisResponse?, cmd: RedisCommand) -> Void
     typealias VoidCompletionHandler = (success: Bool, cmd: RedisCommand) -> Void
     
@@ -55,7 +55,7 @@ class RedisCommand : CustomStringConvertible
         switch self.commandType {
         case .Get, .Subscribe, .Publish:
             valueCompletionHandler?(success: false, key: key!, result: nil, cmd: self)
-        case .Set, .Auth:
+        case .Set, .Auth, .Quit:
             voidCompletionHandler?(success: false, cmd: self)
         }
 
@@ -78,11 +78,16 @@ class RedisCommand : CustomStringConvertible
         switch self.commandType {
         case .Get, .Publish, .Subscribe:
             valueCompletionHandler?(success: success, key: key!, result: response, cmd: self)
-        case .Set, .Auth:
+        case .Set, .Auth, .Quit:
             voidCompletionHandler?(success: success, cmd: self)
         }
 
         delegate?.commandExecuted(self)
+    }
+    
+    static func Quit(handler: VoidCompletionHandler?) -> RedisCommand
+    {
+        return RedisCommand(type: .Quit, voidCompletionHandler: handler)
     }
     
     static func Auth(password: String, handler: VoidCompletionHandler?) -> RedisCommand
@@ -153,6 +158,8 @@ class RedisCommand : CustomStringConvertible
             return buildCommandString(["SUBSCRIBE", self.param1!])
         case .Auth:
             return buildCommandString(["AUTH", self.param1!])
+        case .Quit:
+            return buildCommandString(["QUIT"])
         }
     }
 }
