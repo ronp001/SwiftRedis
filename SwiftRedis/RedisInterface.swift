@@ -47,6 +47,17 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
         sendNextCommandIfPossible()
     }
     
+    func skipPendingCommandsAndQuit(completionHandler: RedisCommand.VoidCompletionHandler? )
+    {
+        if commandQueue.count > 0 {
+            print("RedisInterface -- skipPendingCommandsAndQuit: removing \(commandQueue.count) pending commands from redis queue")
+            commandQueue.removeAll()
+        } else {
+            print("RedisInterface -- skipPendingCommandsAndQuit: no pending commands to remove")
+        }
+        self.quit(completionHandler)
+    }
+    
     func sendNextCommandIfPossible()
     {
         if !isConnected { return }
@@ -103,6 +114,11 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
     func setDataForKey(key: String, data: NSData, completionHandler: RedisCommand.VoidCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Set(key, valueToSet: data, handler: completionHandler))
+    }
+    
+    func setValueForKey(key: String, stringValue: String, completionHandler: RedisCommand.VoidCompletionHandler? )
+    {
+        addCommandToQueue(RedisCommand.Set(key, valueToSet: stringValue, handler: completionHandler))
     }
     
     func getDataForKey(key: String, completionHandler: RedisCommand.ValueCompletionHandler? )

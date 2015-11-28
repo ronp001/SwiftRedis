@@ -75,11 +75,39 @@ class RedisInterfaceTests: XCTestCase
         waitForExpectationsWithTimeout(5, handler: { error in
             XCTAssertNil(error, "Error")
         })
-        
-        
-        
     }
     
+    
+    func testSkipPendingCommandsAndQuit()
+    {
+        let r = RedisInterface(host: ConnectionParams.serverAddress, port: ConnectionParams.serverPort, auth: ConnectionParams.auth)
+        
+        r.connect()  // this stores an AUTH command in the queue.  since we are running in a single thread,
+                     // the command will not be sent before this routine reaches "waitForExpectation"
+
+        let storedExpectation = expectationWithDescription("a handler was called")
+
+        
+        // queue a command that we do not expect will execute
+        r.setValueForKey("testkey1", stringValue: "a value", completionHandler: { success, cmd in
+            XCTAssertFalse(true, "not expecting this handler to be called, because the call to testSkipPendingCommandsAndQuit() should have removed the command from the queue")
+            storedExpectation.fulfill()
+        })
+
+        var quitHandlerCalled = false
+        
+        r.skipPendingCommandsAndQuit({ success, cmd in
+            XCTAssertTrue(success == true, "expecting quit handler to succeed")
+            quitHandlerCalled = true
+            storedExpectation.fulfill()
+        })
+        
+        waitForExpectationsWithTimeout(2, handler: { error in
+            XCTAssertNil(error, "expecting operation to succeed")
+            XCTAssertTrue(quitHandlerCalled, "expecting quit handler to have been called")
+        })
+        
+    }
     
     func testPubSub()
     {
