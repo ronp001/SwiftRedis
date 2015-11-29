@@ -52,7 +52,7 @@ redis.getDataForKey("some:key", completionHandler: { success, key, data, cmd in
     }
 })
 
-// Queue a QUIT command (the connection will close when the QUIT command returns)
+// Queue a QUIT command (the connection will close when the QUIT command completes)
 redis.quit({success, cmd in
     print("QUIT command completed")
 })
