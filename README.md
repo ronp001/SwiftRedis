@@ -64,7 +64,7 @@ redis.quit({success, cmd in
 
 ## For more info
 
-To understand high-level usage: check the Unit Tests for usage of the  RedisInterface() class.
+To understand high-level usage: check the [Unit Tests](https://github.com/ronp001/SwiftRedis/blob/master/SwiftRedisTests/SwiftRedisTests.swift) for usage of the  RedisInterface() class.
 
 To understand internals and learn how to extend this:  examine the Unit Tests for the lower-level classes (RedisConnection, RedisCommand, RedisParser, etc.)
 
