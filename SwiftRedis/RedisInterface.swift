@@ -136,6 +136,11 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
         addCommandToQueue(RedisCommand.Publish(channel, value: value, handler: completionHandler))
     }
     
+    func generic(cmd: String, _ arg1: String? = nil, _ arg2: String? = nil, _ arg3: String? = nil, _ arg4: String? = nil, completionHandler: RedisCommand.ValueCompletionHandler?)
+    {
+        addCommandToQueue(RedisCommand.Generic(cmd, arg1, arg2, arg3, arg4, handler: completionHandler))
+    }
+    
     func quit(completionHandler: RedisCommand.VoidCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Quit(completionHandler))
