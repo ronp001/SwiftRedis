@@ -55,7 +55,7 @@ redis.getDataForKey("some:key", completionHandler: { success, key, data, cmd in
 var quitComplete: Bool = false
 redis.quit({success, cmd in
     print("QUIT command completed")
-})
+})`
 
 
     
