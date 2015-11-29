@@ -21,7 +21,7 @@ class RedisCommand : CustomStringConvertible
         return "RedisCommand(\(commandType))"
     }
     
-    enum Type { case Get, Set, Auth, Publish, Subscribe, Quit }
+    enum Type { case Get, Set, Auth, Publish, Subscribe, Quit, Generic }
     typealias ValueCompletionHandler = (success: Bool, key: String, result: RedisResponse?, cmd: RedisCommand) -> Void
     typealias VoidCompletionHandler = (success: Bool, cmd: RedisCommand) -> Void
     
@@ -30,6 +30,8 @@ class RedisCommand : CustomStringConvertible
     let commandType: Type
     var param1: String?
     var param2: NSData?
+    var additionalParams: [String?]?
+    
     let valueCompletionHandler: ValueCompletionHandler?
     let voidCompletionHandler: VoidCompletionHandler?
     let finishWhenResponseReceived: Bool
@@ -37,14 +39,14 @@ class RedisCommand : CustomStringConvertible
     var key: String? { get { return param1 }  set(value) { param1 = value } }
     var valueToSet: NSData? { get { return param2 } set(value) {param2 = value} }
     
-    init(type: Type, param1: String? = nil, param2: NSData? = nil, valueCompletionHandler: ValueCompletionHandler? = nil, voidCompletionHandler: VoidCompletionHandler? = nil )
+    init(type: Type, param1: String? = nil, param2: NSData? = nil, valueCompletionHandler: ValueCompletionHandler? = nil, voidCompletionHandler: VoidCompletionHandler? = nil, additionalParams: [String?]? = nil )
     {
         self.commandType = type
         self.param1 = param1
         self.param2 = param2
         self.valueCompletionHandler = valueCompletionHandler
         self.voidCompletionHandler = voidCompletionHandler
-        
+        self.additionalParams = additionalParams
         
         finishWhenResponseReceived = (type != .Subscribe)
     }
@@ -53,7 +55,7 @@ class RedisCommand : CustomStringConvertible
     func completionFailed()
     {
         switch self.commandType {
-        case .Get, .Subscribe, .Publish:
+        case .Get, .Subscribe, .Publish, .Generic:
             valueCompletionHandler?(success: false, key: key!, result: nil, cmd: self)
         case .Set, .Auth, .Quit:
             voidCompletionHandler?(success: false, cmd: self)
@@ -76,7 +78,7 @@ class RedisCommand : CustomStringConvertible
         }
         
         switch self.commandType {
-        case .Get, .Publish, .Subscribe:
+        case .Get, .Publish, .Subscribe, .Generic:
             valueCompletionHandler?(success: success, key: key!, result: response, cmd: self)
         case .Set, .Auth, .Quit:
             voidCompletionHandler?(success: success, cmd: self)
@@ -120,6 +122,11 @@ class RedisCommand : CustomStringConvertible
         return RedisCommand(type: .Subscribe, param1: channel, valueCompletionHandler: handler)
     }
     
+    static func Generic(cmd: String, _ arg1: String? = nil, _ arg2: String? = nil, _ arg3: String? = nil, _ arg4: String? = nil, handler: ValueCompletionHandler? ) -> RedisCommand
+    {
+        return RedisCommand(type: .Generic, param1: cmd, param2: nil, valueCompletionHandler: handler, voidCompletionHandler: nil, additionalParams: [arg1, arg2, arg3, arg4])
+    }
+    
     func buildCommandString(words: [NSObject]) -> NSData
     {
         let result = NSMutableData(data: "*\(words.count)\r\n".dataUsingEncoding(NSUTF8StringEncoding)!)
@@ -160,6 +167,17 @@ class RedisCommand : CustomStringConvertible
             return buildCommandString(["AUTH", self.param1!])
         case .Quit:
             return buildCommandString(["QUIT"])
+        case .Generic:
+            var cmdArray: [String] = []
+            cmdArray += [self.param1!]
+            if let additionalParams = self.additionalParams {
+                for param in additionalParams {
+                    if let param = param {
+                        cmdArray += [param]
+                    }
+                }
+            }
+            return buildCommandString(cmdArray)
         }
     }
 }

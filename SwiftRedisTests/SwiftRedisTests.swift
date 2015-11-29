@@ -568,6 +568,14 @@ class RedisParserTests: XCTestCase {
         
         let setCmd = RedisCommand.Set("aKey", valueToSet: "abc".dataUsingEncoding(NSUTF8StringEncoding)!, handler: nil)
         XCTAssertEqual(setCmd.getCommandString(), "*3\r\n$3\r\nSET\r\n$4\r\naKey\r\n$3\r\nabc\r\n".dataUsingEncoding(NSUTF8StringEncoding))
+        
+        
+        let genericCmd = RedisCommand.Generic("SET", "mykey", "1", "EX", "3", handler: nil)
+
+        XCTAssertEqual(String(data: genericCmd.getCommandString()!, encoding: NSUTF8StringEncoding), "*5\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$1\r\n1\r\n$2\r\nEX\r\n$1\r\n3\r\n")
+        
+        
+        
     }
     
 }
