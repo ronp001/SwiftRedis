@@ -24,7 +24,8 @@ Add the SwiftRedis source files to your project.  Create a RedisInterface object
 
 ## Simple example
 
-`let redis = RedisInterface(host: <host-address String>, port: <port Int>, auth: <auth String>)
+```swift
+let redis = RedisInterface(host: <host-address String>, port: <port Int>, auth: <auth String>)
 
 // Queue a request to initiate a connection.
 // Once a connection is established, an AUTH command will be issued with the auth parameters specified above.
@@ -52,10 +53,10 @@ redis.getDataForKey("some:key", completionHandler: { success, key, data, cmd in
 })
 
 // Queue a QUIT command (the connection will close when the QUIT command returns)
-var quitComplete: Bool = false
 redis.quit({success, cmd in
     print("QUIT command completed")
 })
+```
 
 
     
