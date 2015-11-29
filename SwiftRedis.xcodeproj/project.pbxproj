@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E491E8151C0AA2800073E014 /* LICENSE.md in Sources */ = {isa = PBXBuildFile; fileRef = E491E8131C0AA2800073E014 /* LICENSE.md */; };
-		E491E8161C0AA2800073E014 /* README in Resources */ = {isa = PBXBuildFile; fileRef = E491E8141C0AA2800073E014 /* README */; };
+		E491E8161C0AA2800073E014 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = E491E8141C0AA2800073E014 /* README.md */; };
 		E49804C21BF07248003D5539 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49804C11BF07248003D5539 /* AppDelegate.swift */; };
 		E49804C41BF07248003D5539 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49804C31BF07248003D5539 /* ViewController.swift */; };
 		E49804C71BF07248003D5539 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E49804C51BF07248003D5539 /* Main.storyboard */; };
@@ -37,7 +37,7 @@
 
 /* Begin PBXFileReference section */
 		E491E8131C0AA2800073E014 /* LICENSE.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
-		E491E8141C0AA2800073E014 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		E491E8141C0AA2800073E014 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		E49804BE1BF07248003D5539 /* SwiftRedis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftRedis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E49804C11BF07248003D5539 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E49804C31BF07248003D5539 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -80,7 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				E491E8131C0AA2800073E014 /* LICENSE.md */,
-				E491E8141C0AA2800073E014 /* README */,
+				E491E8141C0AA2800073E014 /* README.md */,
 				E49804C01BF07248003D5539 /* SwiftRedis */,
 				E49804D51BF07248003D5539 /* SwiftRedisTests */,
 				E49804BF1BF07248003D5539 /* Products */,
@@ -209,7 +209,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E491E8161C0AA2800073E014 /* README in Resources */,
+				E491E8161C0AA2800073E014 /* README.md in Resources */,
 				E49804CC1BF07248003D5539 /* LaunchScreen.storyboard in Resources */,
 				E49804C91BF07248003D5539 /* Assets.xcassets in Resources */,
 				E49804C71BF07248003D5539 /* Main.storyboard in Resources */,

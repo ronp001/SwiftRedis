@@ -5,13 +5,57 @@
 //  Created by Ron Perry on 11/9/15.
 //  Copyright © 2015 Ron Perry. All rights reserved.
 //
-
 import XCTest
 @testable import SwiftRedis
 
 
 class RedisInterfaceTests: XCTestCase
 {
+    func testReadmeExample()
+    {
+        
+        let redis = RedisInterface(host: ConnectionParams.serverAddress, port: ConnectionParams.serverPort, auth: ConnectionParams.auth)
+//        let redis = RedisInterface(host: <host-address String>, port: <port Int>, auth: <auth String>)
+        
+        // Queue a request to initiate a connection.
+        // Once a connection is established, an AUTH command will be issued with the auth parameters specified above.
+        redis.connect()
+        
+        // Queue a request to set a value for a key in the Redis database.  This command will only
+        // execute after the connection is established and authenticated.
+        redis.setValueForKey("some:key", stringValue: "a value", completionHandler: { success, cmd in
+            // this completion handler will be executed after the SET command returns
+            if success {
+                print("value stored successfully")
+            } else {
+                print("value was not stored")
+            }
+        })
+        
+        // Queue a request to get the value of a key in the Redis database.  This command will only
+        // execute after the previous command is complete.
+        redis.getDataForKey("some:key", completionHandler: { success, key, data, cmd in
+            if success {
+                print("the stored data for \(key) is \(data!.stringVal)")
+            } else {
+                print("could not get value for \(key)")
+            }
+        })
+        
+        // Queue a QUIT command (the connection will close when the QUIT command returns)
+        var quitComplete: Bool = false
+        let doneExpectation = expectationWithDescription("done")
+        redis.quit({success, cmd in
+            quitComplete = true
+            doneExpectation.fulfill()
+        })
+        
+        waitForExpectationsWithTimeout(2, handler: { error in
+            XCTAssert(quitComplete)
+        })
+    }
+    
+    
     func testSetAndGet()
     {
         let r = RedisInterface(host: ConnectionParams.serverAddress, port: ConnectionParams.serverPort, auth: ConnectionParams.auth)

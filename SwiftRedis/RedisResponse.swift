@@ -25,7 +25,35 @@ class RedisResponse : CustomStringConvertible {
     let responseType: ResponseType
     
     var intVal: Int?
-    var stringVal: String?
+
+    private var stringValInternal: String?
+    
+    var stringVal: String? {
+        get {
+            switch responseType {
+            case .String:
+                return self.stringValInternal
+            case .Data:
+                return String(NSString(data: self.dataVal!, encoding: NSUTF8StringEncoding))
+            case .Int:
+                return String(intVal)
+            case .Error:
+                return nil
+            case .Unknown:
+                return nil
+            case .Array:
+                var ar: [String?] = []
+                for elem in arrayVal! {
+                    ar += [elem.stringVal]
+                }
+                return String(ar)
+            }
+        }
+        set(value) {
+            stringValInternal = value
+        }
+    }
+    
     var dataVal: NSData?
     var errorVal: String?
     var arrayVal: [RedisResponse]?
@@ -36,7 +64,7 @@ class RedisResponse : CustomStringConvertible {
     {
         self.parseErrorMsg = nil
         self.intVal = intVal
-        self.stringVal = stringVal
+        self.stringValInternal = stringVal
         self.errorVal = errorVal
         self.arrayVal = arrayVal
         self.dataVal = dataVal
