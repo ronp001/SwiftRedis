@@ -126,6 +126,11 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
         addCommandToQueue(RedisCommand.Get(key, handler: completionHandler))
     }
     
+    func getValueForKey(key: String, completionHandler: RedisCommand.ValueCompletionHandler? )
+    {
+        getDataForKey(key, completionHandler: completionHandler)
+    }
+    
     func subscribe(channel: String, completionHandler: RedisCommand.ValueCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Subscribe(channel, handler: completionHandler))

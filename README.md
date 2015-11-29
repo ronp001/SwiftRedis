@@ -44,7 +44,7 @@ redis.setValueForKey("some:key", stringValue: "a value", completionHandler: { su
 
 // Queue a request to get the value of a key in the Redis database.  This command will only
 // execute after the previous command is complete.
-redis.getDataForKey("some:key", completionHandler: { success, key, data, cmd in
+redis.getValueForKey("some:key", completionHandler: { success, key, data, cmd in
     if success {
         print("the stored data for \(key) is \(data!.stringVal)")
     } else {
