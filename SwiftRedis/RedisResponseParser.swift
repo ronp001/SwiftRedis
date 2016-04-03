@@ -73,7 +73,7 @@ class RedisResponseParser: RedisResponseParserDelegate
     // MARK:  acting as the delegate for the sub-parser (when processing arrays)
     
     func receivedResponse(response: RedisResponse) {
-        arrayElementsLeft!--
+        arrayElementsLeft! -= 1
         
         self.response!.addArrayElement(response)
         

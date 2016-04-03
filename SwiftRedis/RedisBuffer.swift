@@ -100,7 +100,7 @@ class RedisBuffer
             
             assert(count > 0)
             
-            bytesProcessed++
+            bytesProcessed += 1
             
             if foundCR == true && char == charLF {
                 done = true

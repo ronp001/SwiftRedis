@@ -186,7 +186,7 @@ class RedisInterfaceTests: XCTestCase
                 XCTAssertNotNil(expectingSubscribeToReturn1)
                 expectingSubscribeToReturn1.fulfill()
                 
-                subscribeReturnCount++
+                subscribeReturnCount += 1
                 
             case 1:
                 XCTAssertTrue(success)
@@ -199,7 +199,7 @@ class RedisInterfaceTests: XCTestCase
                 
                 XCTAssertNotNil(expectingSubscribeToReturn2)
                 expectingSubscribeToReturn2!.fulfill()
-                subscribeReturnCount++
+                subscribeReturnCount += 1
                 
             case 2:
                 XCTAssertTrue(success)
@@ -212,7 +212,7 @@ class RedisInterfaceTests: XCTestCase
                 
                 XCTAssertNotNil(expectingSubscribeToReturn3)
                 expectingSubscribeToReturn3!.fulfill()
-                subscribeReturnCount++
+                subscribeReturnCount+=1
                 
             default:
                 XCTAssert(false)
