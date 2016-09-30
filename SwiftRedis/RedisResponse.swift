@@ -10,7 +10,7 @@ import Foundation
 
 class RedisResponse : CustomStringConvertible {
     
-    enum ResponseType { case Int, String, Data, Error, Array, Unknown }
+    enum ResponseType { case int, string, data, error, array, unknown }
     
     class ParseError : NSError {
         init(msg: String) {
@@ -26,27 +26,27 @@ class RedisResponse : CustomStringConvertible {
     
     var intVal: Int?
 
-    private var stringValInternal: String?
+    fileprivate var stringValInternal: String?
     
     var stringVal: String? {
         get {
             switch responseType {
-            case .String:
+            case .string:
                 return self.stringValInternal
-            case .Data:
-                return String(NSString(data: self.dataVal!, encoding: NSUTF8StringEncoding))
-            case .Int:
-                return String(intVal)
-            case .Error:
+            case .data:
+                return String(describing: NSString(data: self.dataVal!, encoding: String.Encoding.utf8.rawValue))
+            case .int:
+                return String(describing: intVal)
+            case .error:
                 return nil
-            case .Unknown:
+            case .unknown:
                 return nil
-            case .Array:
+            case .array:
                 var ar: [String?] = []
                 for elem in arrayVal! {
                     ar += [elem.stringVal]
                 }
-                return String(ar)
+                return String(describing: ar)
             }
         }
         set(value) {
@@ -54,13 +54,13 @@ class RedisResponse : CustomStringConvertible {
         }
     }
     
-    var dataVal: NSData?
+    var dataVal: Data?
     var errorVal: String?
     var arrayVal: [RedisResponse]?
     
     var parseErrorMsg: String? = nil
     
-    init(intVal: Int? = nil, dataVal: NSData? = nil, stringVal: String? = nil, errorVal: String? = nil, arrayVal: [RedisResponse]? = nil, responseType: ResponseType? = nil)
+    init(intVal: Int? = nil, dataVal: Data? = nil, stringVal: String? = nil, errorVal: String? = nil, arrayVal: [RedisResponse]? = nil, responseType: ResponseType? = nil)
     {
         self.parseErrorMsg = nil
         self.intVal = intVal
@@ -69,27 +69,27 @@ class RedisResponse : CustomStringConvertible {
         self.arrayVal = arrayVal
         self.dataVal = dataVal
         
-        if intVal != nil { self.responseType = .Int }
-        else if stringVal != nil { self.responseType = .String }
-        else if errorVal != nil { self.responseType = .Error }
-        else if arrayVal != nil { self.responseType = .Array }
-        else if dataVal != nil { self.responseType = .Data }
+        if intVal != nil { self.responseType = .int }
+        else if stringVal != nil { self.responseType = .string }
+        else if errorVal != nil { self.responseType = .error }
+        else if arrayVal != nil { self.responseType = .array }
+        else if dataVal != nil { self.responseType = .data }
         else if responseType != nil { self.responseType = responseType! }
-        else { self.responseType = .Unknown }
+        else { self.responseType = .unknown }
         
-        if self.responseType == .Array && self.arrayVal == nil {
+        if self.responseType == .array && self.arrayVal == nil {
             self.arrayVal = [RedisResponse]()
         }
     }
     
-    func parseError(msg: String)
+    func parseError(_ msg: String)
     {
         NSLog("Parse error - \(msg)")
         parseErrorMsg = msg
     }
     
     // should only be called if the current object responseType is .Array
-    func addArrayElement(response: RedisResponse)
+    func addArrayElement(_ response: RedisResponse)
     {
         self.arrayVal!.append(response)
     }
@@ -98,17 +98,17 @@ class RedisResponse : CustomStringConvertible {
         var result = "RedisResponse(\(self.responseType):"
         
         switch self.responseType {
-        case .Error:
+        case .error:
             result += self.errorVal!
-        case .String:
+        case .string:
             result += self.stringVal!
-        case .Int:
+        case .int:
             result += String(self.intVal!)
-        case .Data:
-            result += "[Data - \(self.dataVal!.length) bytes]"
-        case .Array:
+        case .data:
+            result += "[Data - \(self.dataVal!.count) bytes]"
+        case .array:
             result += "[Array - \(self.arrayVal!.count) elements]"
-        case .Unknown:
+        case .unknown:
             result += "?"
             break
         }
@@ -119,7 +119,7 @@ class RedisResponse : CustomStringConvertible {
     }
     
     // reads data from the buffer according to own responseType
-    func readValueFromBuffer(buffer: RedisBuffer, numBytes: Int?) -> Bool?
+    func readValueFromBuffer(_ buffer: RedisBuffer, numBytes: Int?) -> Bool?
     {
         let data = buffer.getNextDataOfSize(numBytes)
         
@@ -133,33 +133,33 @@ class RedisResponse : CustomStringConvertible {
             }
             
             // if the data was CRLF, it would have been removed by getNxtDataUntilCRLF, so buffer should be empty
-            if crlfData!.length != 0 {
+            if crlfData!.count != 0 {
                 buffer.restoreRemovedData(crlfData!)
                 return false
             }
         }
         
         switch responseType {
-        case .Data:
+        case .data:
             self.dataVal = data
             return true
             
-        case .String:
-            self.stringVal = String(data: data!, encoding: NSUTF8StringEncoding)
+        case .string:
+            self.stringVal = String(data: data!, encoding: String.Encoding.utf8)
             if ( self.stringVal == nil ) {
                 parseError("Could not parse string")
                 return false
             }
             return true
-        case .Error:
-            self.errorVal = String(data: data!, encoding: NSUTF8StringEncoding)
+        case .error:
+            self.errorVal = String(data: data!, encoding: String.Encoding.utf8)
             if ( self.errorVal == nil ) {
                 parseError("Could not parse string")
                 return false
             }
             return true
-        case .Int:
-            let str = String(data: data!, encoding: NSUTF8StringEncoding)
+        case .int:
+            let str = String(data: data!, encoding: String.Encoding.utf8)
             if ( str == nil ) {
                 parseError("Could not parse string")
                 return false
@@ -171,11 +171,11 @@ class RedisResponse : CustomStringConvertible {
             }
             return true
             
-        case .Array:
+        case .array:
             parseError("Array parsing not supported yet")
             return false
             
-        case .Unknown:
+        case .unknown:
             parseError("Trying to parse when ResponseType == .Unknown")
             return false
         }
@@ -190,17 +190,17 @@ func == (left: RedisResponse, right: RedisResponse) -> Bool {
     if left.responseType != right.responseType { return false }
     
     switch left.responseType {
-    case .Int:
+    case .int:
         return left.intVal == right.intVal
-    case .String:
+    case .string:
         return left.stringVal == right.stringVal
-    case .Error:
+    case .error:
         return left.errorVal == right.errorVal
-    case .Unknown:
+    case .unknown:
         return true
-    case .Data:
-        return left.dataVal!.isEqualToData(right.dataVal!)
-    case .Array:
+    case .data:
+        return (left.dataVal! == right.dataVal!)
+    case .array:
         if left.arrayVal!.count != right.arrayVal!.count { return false }
         for i in 0 ... left.arrayVal!.count-1 {
             if !(left.arrayVal![i] == right.arrayVal![i]) { return false }

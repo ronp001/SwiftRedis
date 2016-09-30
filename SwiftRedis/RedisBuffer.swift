@@ -10,32 +10,32 @@ import Foundation
 
 class RedisBuffer
 {
-    var dataAccumulatedFromStream: NSData?
+    var dataAccumulatedFromStream: Data?
     
     func clear()
     {
         dataAccumulatedFromStream = nil
     }
     
-    func restoreRemovedData(dataToRestore: NSData) {
+    func restoreRemovedData(_ dataToRestore: Data) {
         if dataAccumulatedFromStream == nil {
             dataAccumulatedFromStream = dataToRestore
             return
         } else {
-            let combinedData = NSMutableData(data: dataToRestore)
-            combinedData.appendData(dataAccumulatedFromStream!)
+            var combinedData = NSData(data: dataToRestore) as Data
+            combinedData.append(dataAccumulatedFromStream!)
             dataAccumulatedFromStream = combinedData
         }
     }
     
-    func removeBytesFromBuffer(numBytesToRemove: Int)
+    func removeBytesFromBuffer(_ numBytesToRemove: Int)
     {
-        let len = dataAccumulatedFromStream!.length - numBytesToRemove
+        let len = dataAccumulatedFromStream!.count - numBytesToRemove
         
         let range = NSMakeRange(numBytesToRemove, len)
-        let data = dataAccumulatedFromStream!.subdataWithRange(range)
+        let data = dataAccumulatedFromStream!.subdata(in: range)
         
-        if data.length == 0 {
+        if data.count == 0 {
             dataAccumulatedFromStream = nil
         } else {
             dataAccumulatedFromStream = data
@@ -43,29 +43,29 @@ class RedisBuffer
     }
     
     
-    func getNextDataOfSize(size: Int?) -> NSData?
+    func getNextDataOfSize(_ size: Int?) -> Data?
     {
         if size == nil { return getNextDataUntilCRLF() }
         
         if dataAccumulatedFromStream == nil { return nil }
-        if dataAccumulatedFromStream!.length < size! {
+        if dataAccumulatedFromStream!.count < size! {
             return nil
         }
         
         let range = NSMakeRange(0, size!)
-        let data = dataAccumulatedFromStream!.subdataWithRange(range)
+        let data = dataAccumulatedFromStream!.subdata(in: range)
         
         removeBytesFromBuffer(size!)
         
         return data
     }
     
-    func getNextStringOfSize(size: Int) -> String?
+    func getNextStringOfSize(_ size: Int) -> String?
     {
         let data = getNextDataOfSize(size)
         if data == nil { return nil }
         
-        return String(NSString(data: data!, encoding: NSUTF8StringEncoding)!)
+        return String(NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!)
     }
     
     func getNextStringUntilCRLF() -> String?
@@ -73,14 +73,14 @@ class RedisBuffer
         let data = getNextDataUntilCRLF()
         if data == nil { return nil }
         
-        return String(NSString(data: data!, encoding: NSUTF8StringEncoding)!)
+        return String(NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!)
     }
     
-    func getNextDataUntilCRLF() -> NSData?
+    func getNextDataUntilCRLF() -> Data?
     {
         if dataAccumulatedFromStream == nil { return nil }
         
-        let len = dataAccumulatedFromStream!.length
+        let len = dataAccumulatedFromStream!.count
         
         var done = false
         var bytesProcessed = 0
@@ -90,7 +90,7 @@ class RedisBuffer
         
         var foundCR = false
         
-        let inputStream = NSInputStream(data: dataAccumulatedFromStream!)
+        let inputStream = InputStream(data: dataAccumulatedFromStream!)
         inputStream.open()
         
         while !done && bytesProcessed < len
@@ -120,21 +120,21 @@ class RedisBuffer
         
     }
     
-    func storeReceivedBytes(data: NSData)
+    func storeReceivedBytes(_ data: Data)
     {
         if dataAccumulatedFromStream == nil {
             dataAccumulatedFromStream = data
         } else {
             let existingData = dataAccumulatedFromStream!
-            let mutableData = NSMutableData.init(data: existingData)
-            mutableData.appendData(data)
+            var mutableData = NSData.init(data: existingData) as Data
+            mutableData.append(data)
             dataAccumulatedFromStream = mutableData
         }
     }
     
-    func storeReceivedString(string: String)
+    func storeReceivedString(_ string: String)
     {
-        let data = string.dataUsingEncoding(NSUTF8StringEncoding)
+        let data = string.data(using: String.Encoding.utf8)
         
         storeReceivedBytes(data!)
     }

@@ -44,13 +44,13 @@ class RedisInterfaceTests: XCTestCase
         
         // Queue a QUIT command (the connection will close when the QUIT command returns)
         var quitComplete: Bool = false
-        let doneExpectation = expectationWithDescription("done")
+        let doneExpectation = expectation(description: "done")
         redis.quit({success, cmd in
             quitComplete = true
             doneExpectation.fulfill()
         })
         
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssert(quitComplete)
         })
     }
@@ -62,61 +62,61 @@ class RedisInterfaceTests: XCTestCase
         
         r.connect()
         
-        let data1 = "hi".dataUsingEncoding(NSUTF8StringEncoding)!
-        let data2 = "hello, world".dataUsingEncoding(NSUTF8StringEncoding)!
+        let data1 = "hi".data(using: String.Encoding.utf8)!
+        let data2 = "hello, world".data(using: String.Encoding.utf8)!
         
         
         // store data1
-        let storedExpectation1 = expectationWithDescription("testkey1 stored")
+        let storedExpectation1 = expectation(description: "testkey1 stored")
         r.setDataForKey("testkey1", data: data1, completionHandler: { success, cmd in
             XCTAssertTrue(success, "expecting success storing data for testkey1")
             storedExpectation1.fulfill()
         })
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "expecting operation to succeed")
         })
         
         // retrieve data1
-        let storedExpectation2 = expectationWithDescription("testkey1 retrieved")
+        let storedExpectation2 = expectation(description: "testkey1 retrieved")
         r.getDataForKey("testkey1", completionHandler: { success, key, data, cmd in
             storedExpectation2.fulfill()
             XCTAssertTrue(success)
             XCTAssert(key == "testkey1")
             XCTAssert(data! == RedisResponse(dataVal: data1))
         })
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "expecting operation to succeed")
         })
         
         
         // store data2
-        let storedExpectation3 = expectationWithDescription("testkey2 stored")
+        let storedExpectation3 = expectation(description: "testkey2 stored")
         r.setDataForKey("testkey2", data: data2, completionHandler: { success, cmd in
             XCTAssertTrue(success, "could not store testkey2")
             storedExpectation3.fulfill()
         })
-        waitForExpectationsWithTimeout(5, handler: { error in
+        waitForExpectations(timeout: 5, handler: { error in
             XCTAssertNil(error, "Error")
         })
         
         // retrieve data2
-        let storedExpectation4 = expectationWithDescription("testkey2 stored")
+        let storedExpectation4 = expectation(description: "testkey2 stored")
         r.getDataForKey("testkey2", completionHandler: { success, key, data, cmd in
             storedExpectation4.fulfill()
             XCTAssertTrue(success)
             XCTAssert(key == "testkey2")
             XCTAssert(data! == RedisResponse(dataVal: data2))
         })
-        waitForExpectationsWithTimeout(5, handler: { error in
+        waitForExpectations(timeout: 5, handler: { error in
             XCTAssertNil(error, "Error")
         })
         
         
-        let storedExpectation5 = expectationWithDescription("quit complete")
+        let storedExpectation5 = expectation(description: "quit complete")
         r.quit({ success in
             storedExpectation5.fulfill()
         })
-        waitForExpectationsWithTimeout(5, handler: { error in
+        waitForExpectations(timeout: 5, handler: { error in
             XCTAssertNil(error, "Error")
         })
     }
@@ -129,7 +129,7 @@ class RedisInterfaceTests: XCTestCase
         r.connect()  // this stores an AUTH command in the queue.  since we are running in a single thread,
                      // the command will not be sent before this routine reaches "waitForExpectation"
 
-        let storedExpectation = expectationWithDescription("a handler was called")
+        let storedExpectation = expectation(description: "a handler was called")
 
         
         // queue a command that we do not expect will execute
@@ -146,7 +146,7 @@ class RedisInterfaceTests: XCTestCase
             storedExpectation.fulfill()
         })
         
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "expecting operation to succeed")
             XCTAssertTrue(quitHandlerCalled, "expecting quit handler to have been called")
         })
@@ -161,7 +161,7 @@ class RedisInterfaceTests: XCTestCase
         let riSubscribe = RedisInterface(host: ConnectionParams.serverAddress, port: ConnectionParams.serverPort, auth: ConnectionParams.auth)
         riSubscribe.connect()
         
-        let expectingSubscribeToReturn1 = expectationWithDescription("subscribe operation returned once")
+        let expectingSubscribeToReturn1 = expectation(description: "subscribe operation returned once")
         var expectingSubscribeToReturn2: XCTestExpectation? = nil
         var expectingSubscribeToReturn3: XCTestExpectation? = nil
         var subscribeReturnCount = 0
@@ -179,8 +179,8 @@ class RedisInterfaceTests: XCTestCase
                 XCTAssertTrue(success)
                 XCTAssert(channel == "testchannel")
                 XCTAssert(data! == RedisResponse(arrayVal: [
-                    RedisResponse(dataVal: "subscribe".dataUsingEncoding(NSUTF8StringEncoding)),
-                    RedisResponse(dataVal: "testchannel".dataUsingEncoding(NSUTF8StringEncoding)),
+                    RedisResponse(dataVal: "subscribe".data(using: String.Encoding.utf8)),
+                    RedisResponse(dataVal: "testchannel".data(using: String.Encoding.utf8)),
                     RedisResponse(intVal: 1)
                     ]))
                 XCTAssertNotNil(expectingSubscribeToReturn1)
@@ -192,9 +192,9 @@ class RedisInterfaceTests: XCTestCase
                 XCTAssertTrue(success)
                 XCTAssert(channel == "testchannel")
                 XCTAssert(data! == RedisResponse(arrayVal: [
-                    RedisResponse(dataVal: "message".dataUsingEncoding(NSUTF8StringEncoding)),
-                    RedisResponse(dataVal: "testchannel".dataUsingEncoding(NSUTF8StringEncoding)),
-                    RedisResponse(dataVal: "publish op 1".dataUsingEncoding(NSUTF8StringEncoding)),
+                    RedisResponse(dataVal: "message".data(using: String.Encoding.utf8)),
+                    RedisResponse(dataVal: "testchannel".data(using: String.Encoding.utf8)),
+                    RedisResponse(dataVal: "publish op 1".data(using: String.Encoding.utf8)),
                     ]))
                 
                 XCTAssertNotNil(expectingSubscribeToReturn2)
@@ -205,9 +205,9 @@ class RedisInterfaceTests: XCTestCase
                 XCTAssertTrue(success)
                 XCTAssert(channel == "testchannel")
                 XCTAssert(data! == RedisResponse(arrayVal: [
-                    RedisResponse(dataVal: "message".dataUsingEncoding(NSUTF8StringEncoding)),
-                    RedisResponse(dataVal: "testchannel".dataUsingEncoding(NSUTF8StringEncoding)),
-                    RedisResponse(dataVal: "publish op 2".dataUsingEncoding(NSUTF8StringEncoding)),
+                    RedisResponse(dataVal: "message".data(using: String.Encoding.utf8)),
+                    RedisResponse(dataVal: "testchannel".data(using: String.Encoding.utf8)),
+                    RedisResponse(dataVal: "publish op 2".data(using: String.Encoding.utf8)),
                     ]))
                 
                 XCTAssertNotNil(expectingSubscribeToReturn3)
@@ -220,7 +220,7 @@ class RedisInterfaceTests: XCTestCase
         })
         
         // wait for the subscribe operation to complete
-        waitForExpectationsWithTimeout(1, handler: { error in
+        waitForExpectations(timeout: 1, handler: { error in
             XCTAssertNil(error, "expecting operation to succeed")
         })
         
@@ -228,14 +228,14 @@ class RedisInterfaceTests: XCTestCase
         // -----
         
         // publish something to the test channel
-        expectingSubscribeToReturn2 = expectationWithDescription("subscribe operation returned twice")
-        let expectingPublishToComplete1 = expectationWithDescription("publish operation 1 completed")
+        expectingSubscribeToReturn2 = expectation(description: "subscribe operation returned twice")
+        let expectingPublishToComplete1 = expectation(description: "publish operation 1 completed")
         riPublish.publish("testchannel", value: "publish op 1", completionHandler: { success, key, data, cmd in
             expectingPublishToComplete1.fulfill()
         })
         
         // wait for both the publish to complete, and the subscribe to return the 2nd time
-        waitForExpectationsWithTimeout(1, handler: { error in
+        waitForExpectations(timeout: 1, handler: { error in
             XCTAssertNil(error, "expecting publish 1 to complete, and subscribe to return 2nd time")
         })
         
@@ -244,14 +244,14 @@ class RedisInterfaceTests: XCTestCase
         // -----
         
         // publish something else to the test channel
-        expectingSubscribeToReturn3 = expectationWithDescription("subscribe operation returned third time")
-        let expectingPublishToComplete2 = expectationWithDescription("publish operation 2 completed")
+        expectingSubscribeToReturn3 = expectation(description: "subscribe operation returned third time")
+        let expectingPublishToComplete2 = expectation(description: "publish operation 2 completed")
         riPublish.publish("testchannel", value: "publish op 2", completionHandler: { success, key, data, cmd in
             expectingPublishToComplete2.fulfill()
         })
         
         // wait for both the publish to complete, and the subscribe to return the 2nd time
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "expecting publish 2 to complete, and subscribe to return 3nd time")
         })
         
@@ -274,7 +274,7 @@ class RedisConnectionTests: XCTestCase {
         r.connect()
         
         // test that it works once
-        let storedExpectation1 = expectationWithDescription("set command handler activated")
+        let storedExpectation1 = expectation(description: "set command handler activated")
         let cmd = RedisCommand.Auth(ConnectionParams.auth, handler: { success, cmd in
             XCTAssertTrue(success, "auth command expected to succeed")
             XCTAssert(cmd.response! == RedisResponse(stringVal: "OK"), "expecting response from Redis to be OK")
@@ -283,7 +283,7 @@ class RedisConnectionTests: XCTestCase {
         
         r.setPendingCommand(cmd)
         
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "Error")
         })
         
@@ -295,7 +295,7 @@ class RedisConnectionTests: XCTestCase {
         r.connect()
         
         // test that it works once
-        let storedExpectation1 = expectationWithDescription("set command handler activated")
+        let storedExpectation1 = expectation(description: "set command handler activated")
         let cmd = RedisCommand.Auth(ConnectionParams.auth, handler: { success, cmd in
             XCTAssertTrue(success, "auth command expected to succeed")
             XCTAssert(cmd.response! == RedisResponse(stringVal: "OK"), "expecting response from Redis to be OK")
@@ -304,7 +304,7 @@ class RedisConnectionTests: XCTestCase {
         
         r.setPendingCommand(cmd)
         
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "Error")
         })
         
@@ -313,7 +313,7 @@ class RedisConnectionTests: XCTestCase {
         r.connect()
         
         // test that it works again
-        let storedExpectation2 = expectationWithDescription("set command handler activated second time")
+        let storedExpectation2 = expectation(description: "set command handler activated second time")
         let cmd2 = RedisCommand.Auth(ConnectionParams.auth, handler: { success, cmd in
             XCTAssertTrue(success, "auth command expected to succeed again")
             XCTAssert(cmd.response! == RedisResponse(stringVal: "OK"), "expecting second response from Redis to be OK")
@@ -322,7 +322,7 @@ class RedisConnectionTests: XCTestCase {
         
         r.setPendingCommand(cmd2)
         
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "Error")
         })
         
@@ -334,7 +334,7 @@ class RedisConnectionTests: XCTestCase {
         r.connect()
         
         // test that it works once
-        let storedExpectation1 = expectationWithDescription("set command handler activated")
+        let storedExpectation1 = expectation(description: "set command handler activated")
         let cmd = RedisCommand.Set("A", valueToSet: "1", handler: { success, cmd in
             XCTAssertFalse(success, "set command expected to fail")
             XCTAssert(cmd.response! == RedisResponse(errorVal: "NOAUTH Authentication required"), "expecting response from Redis to be NOAUTH Authentication Required")
@@ -343,13 +343,13 @@ class RedisConnectionTests: XCTestCase {
         
         r.setPendingCommand(cmd)
         
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "Error")
         })
         
         
         // now ensure that works the second time too
-        let storedExpectation2 = expectationWithDescription("set command handler activated again")
+        let storedExpectation2 = expectation(description: "set command handler activated again")
         let cmd2 = RedisCommand.Set("A", valueToSet: "1", handler: { success, cmd in
             XCTAssertFalse(success, "set command expected to fail")
             XCTAssert(cmd.response! == RedisResponse(errorVal: "NOAUTH Authentication required"), "expecting response from Redis to be NOAUTH Authentication Required")
@@ -358,7 +358,7 @@ class RedisConnectionTests: XCTestCase {
         
         r.setPendingCommand(cmd2)
         
-        waitForExpectationsWithTimeout(2, handler: { error in
+        waitForExpectations(timeout: 2, handler: { error in
             XCTAssertNil(error, "Error")
         })
         
@@ -369,22 +369,22 @@ class RedisParserTests: XCTestCase {
     func testRedisResponse()
     {
         var r = RedisResponse(stringVal: "abc")
-        XCTAssert(r.responseType == .String)
+        XCTAssert(r.responseType == .string)
         
         r = RedisResponse(intVal: 3)
-        XCTAssert(r.responseType == .Int)
+        XCTAssert(r.responseType == .int)
         
         r = RedisResponse(errorVal: "abc")
-        XCTAssert(r.responseType == .Error)
+        XCTAssert(r.responseType == .error)
         
-        r = RedisResponse(dataVal: NSData())
-        XCTAssert(r.responseType == .Data)
+        r = RedisResponse(dataVal: Data())
+        XCTAssert(r.responseType == .data)
         
         r = RedisResponse(dataVal: NSMutableData())
-        XCTAssert(r.responseType == .Data)
+        XCTAssert(r.responseType == .data)
         
         r = RedisResponse(arrayVal: [RedisResponse(intVal: 1), RedisResponse(stringVal: "hi")])
-        XCTAssert(r.responseType == .Array)
+        XCTAssert(r.responseType == .array)
         
         
         XCTAssert(RedisResponse(intVal: 1) == RedisResponse(intVal: 1))
@@ -399,7 +399,7 @@ class RedisParserTests: XCTestCase {
         let parser = RedisResponseParser()
         
         let resp1 = "+OK\r\n"
-        parser.storeReceivedData(resp1.dataUsingEncoding(NSUTF8StringEncoding)!)
+        parser.storeReceivedData(resp1.data(using: String.Encoding.utf8)!)
         
         XCTAssertEqual(parser.haveResponse, true)
         XCTAssert(parser.lastResponse! == RedisResponse(stringVal: "OK"))
@@ -427,11 +427,11 @@ class RedisParserTests: XCTestCase {
         XCTAssert(parser.lastResponse! == RedisResponse(intVal: 476))
         
         parser.storeReceivedString("$12\r\nabcde\r\nfghij\r\n")
-        let respData = "abcde\r\nfghij".dataUsingEncoding(NSUTF8StringEncoding)
+        let respData = "abcde\r\nfghij".data(using: String.Encoding.utf8)
         XCTAssert(parser.lastResponse! == RedisResponse(dataVal: respData))
         
-        let data2 = "hello\r\n, world".dataUsingEncoding(NSUTF8StringEncoding)
-        parser.storeReceivedString("$\(data2!.length)\r\n")
+        let data2 = "hello\r\n, world".data(using: String.Encoding.utf8)
+        parser.storeReceivedString("$\(data2!.count)\r\n")
         parser.storeReceivedData(data2!)
         XCTAssertEqual(parser.haveResponse, false)
         parser.storeReceivedString("\r\n")
@@ -475,13 +475,13 @@ class RedisParserTests: XCTestCase {
             var responseReported = false
             var abortReported = false
             
-            func errorParsingResponse(error: String?) {
+            func errorParsingResponse(_ error: String?) {
                 errorReported = true
             }
             func parseOperationAborted() {
                 abortReported = true
             }
-            func receivedResponse(response: RedisResponse) {
+            func receivedResponse(_ response: RedisResponse) {
                 responseReported = true
             }
             func reset() {
@@ -604,19 +604,19 @@ class RedisParserTests: XCTestCase {
     func testRedisCommands()
     {
         let getCmd = RedisCommand.Get("aKey", handler: nil)
-        XCTAssertEqual(getCmd.getCommandString(), "*2\r\n$3\r\nGET\r\n$4\r\naKey\r\n".dataUsingEncoding(NSUTF8StringEncoding))
+        XCTAssertEqual(getCmd.getCommandString(), "*2\r\n$3\r\nGET\r\n$4\r\naKey\r\n".data(using: String.Encoding.utf8))
         
         let authCmd = RedisCommand.Auth("12345", handler: nil)
-        XCTAssertEqual(authCmd.getCommandString(), "*2\r\n$4\r\nAUTH\r\n$5\r\n12345\r\n".dataUsingEncoding(NSUTF8StringEncoding))
+        XCTAssertEqual(authCmd.getCommandString(), "*2\r\n$4\r\nAUTH\r\n$5\r\n12345\r\n".data(using: String.Encoding.utf8))
         
         
-        let setCmd = RedisCommand.Set("aKey", valueToSet: "abc".dataUsingEncoding(NSUTF8StringEncoding)!, handler: nil)
-        XCTAssertEqual(setCmd.getCommandString(), "*3\r\n$3\r\nSET\r\n$4\r\naKey\r\n$3\r\nabc\r\n".dataUsingEncoding(NSUTF8StringEncoding))
+        let setCmd = RedisCommand.Set("aKey", valueToSet: "abc".data(using: String.Encoding.utf8)!, handler: nil)
+        XCTAssertEqual(setCmd.getCommandString(), "*3\r\n$3\r\nSET\r\n$4\r\naKey\r\n$3\r\nabc\r\n".data(using: String.Encoding.utf8))
         
         
         let genericCmd = RedisCommand.Generic("SET", "mykey", "1", "EX", "3", handler: nil)
 
-        XCTAssertEqual(String(data: genericCmd.getCommandString()!, encoding: NSUTF8StringEncoding), "*5\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$1\r\n1\r\n$2\r\nEX\r\n$1\r\n3\r\n")
+        XCTAssertEqual(String(data: genericCmd.getCommandString()!, encoding: String.Encoding.utf8), "*5\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$1\r\n1\r\n$2\r\nEX\r\n$1\r\n3\r\n")
         
         
         

@@ -7,16 +7,27 @@
 //
 
 import UIKit
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
 
 
 
 protocol RedisConnectionDelegate {
     func connected()
-    func connectionError(error: String)
+    func connectionError(_ error: String)
 }
 
 
-class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
+class RedisConnection : NSObject, StreamDelegate, RedisResponseParserDelegate
 {
     // MARK: init
     
@@ -26,7 +37,7 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
 
     init(serverAddress: String, serverPort: UInt32)
     {
-        self.serverAddress = serverAddress
+        self.serverAddress = serverAddress as CFString
         self.serverPort = serverPort
     }
     
@@ -36,31 +47,31 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
     // MARK: Delegate
     var delegate: RedisConnectionDelegate?
     
-    func setDelegate(delegate: RedisConnectionDelegate)
+    func setDelegate(_ delegate: RedisConnectionDelegate)
     {
         self.delegate = delegate
     }
     
     // MARK: Streams
-    private var inputStream: NSInputStream?
-    private var outputStream: NSOutputStream?
+    fileprivate var inputStream: InputStream?
+    fileprivate var outputStream: OutputStream?
     
-    func statusRequiresOpening(status: CFStreamStatus) -> Bool {
+    func statusRequiresOpening(_ status: CFStreamStatus) -> Bool {
         switch(status) {
-        case .Closed, .Error, .NotOpen: return true
-        case .AtEnd, .Open, .Opening, .Reading, .Writing: return false
+        case .closed, .error, .notOpen: return true
+        case .atEnd, .open, .opening, .reading, .writing: return false
         }
         
     }
     
-    func inputStreamRequiresOpening(stream: NSInputStream?) -> Bool
+    func inputStreamRequiresOpening(_ stream: InputStream?) -> Bool
     {
         if stream == nil { return true }
         let isStatus = CFReadStreamGetStatus(stream)
         return statusRequiresOpening(isStatus)
     }
     
-    func outputStreamRequiresOpening(stream: NSOutputStream?) -> Bool
+    func outputStreamRequiresOpening(_ stream: OutputStream?) -> Bool
     {
         if stream == nil { return true }
         let osStatus = CFWriteStreamGetStatus(stream)
@@ -68,7 +79,7 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
     }
     
     func disconnect() {
-        connectionState = .Closed
+        connectionState = .closed
 
         if inputStream != nil {
             inputStream!.close()
@@ -121,12 +132,12 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
         self.inputStream!.delegate = self
         self.outputStream!.delegate = self
         
-        self.inputStream!.scheduleInRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
-        self.outputStream!.scheduleInRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+        self.inputStream!.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+        self.outputStream!.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
 
         if enableSSL {
-            self.inputStream?.setProperty(NSStreamSocketSecurityLevelNegotiatedSSL, forKey: NSStreamSocketSecurityLevelKey)
-            self.outputStream?.setProperty(NSStreamSocketSecurityLevelNegotiatedSSL, forKey: NSStreamSocketSecurityLevelKey)
+            self.inputStream?.setProperty(StreamSocketSecurityLevel.negotiatedSSL, forKey: Stream.PropertyKey.socketSecurityLevelKey)
+            self.outputStream?.setProperty(StreamSocketSecurityLevel.negotiatedSSL, forKey: Stream.PropertyKey.socketSecurityLevelKey)
         }
         
         self.inputStream!.open()
@@ -134,10 +145,10 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
     }
 
     // keep track of the connection to the web service
-    enum ConnectionState { case Closed, Ready, Error }
-    var connectionState: ConnectionState = .Closed
+    enum ConnectionState { case closed, ready, error }
+    var connectionState: ConnectionState = .closed
     
-    func stream(stream: NSStream, handleEvent eventCode: NSStreamEvent) {
+    func stream(_ stream: Stream, handle eventCode: Stream.Event) {
         
         if stream == inputStream { handleInputStreamEvent(eventCode) }
         else if stream == outputStream { handleOutputStreamEvent(eventCode) }
@@ -147,7 +158,7 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
     }
 
     
-    func readData(maxBytes: Int = 1024) -> NSData?
+    func readData(_ maxBytes: Int = 1024) -> Data?
     {
         let data = NSMutableData(length: maxBytes)!
         
@@ -160,34 +171,34 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
         
         data.length = length!
         
-        return data
+        return data as Data
     }
     
     
-    func error(message: String)
+    func error(_ message: String)
     {
-        connectionState = .Error
+        connectionState = .error
         delegate?.connectionError(message)
     }
     
 
     let responseParser = RedisResponseParser()
     
-    func handleInputStreamEvent(eventCode: NSStreamEvent)
+    func handleInputStreamEvent(_ eventCode: Stream.Event)
     {
         responseParser.setDelegate(self)
         
         switch(eventCode)
         {
-        case NSStreamEvent.OpenCompleted:
+        case Stream.Event.openCompleted:
             // nothing to do here
             print("input stream: .OpenCompleted")
-        case NSStreamEvent.HasBytesAvailable:
+        case Stream.Event.hasBytesAvailable:
             print("input stream: .HasBytesAvaialable")
             switch connectionState {
-            case .Closed:
+            case .closed:
                 warnIf(true, "InputStream - HasBytesAvailable when state is .Closed")
-            case .Ready:
+            case .ready:
                 while inputStream!.hasBytesAvailable {
                     let data = readData()
                     if data != nil {
@@ -196,36 +207,36 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
                         warn("could not read data even though inputStream!.hasBytesAvaialble is true")
                     }
                 }
-            case .Error:
+            case .error:
                 break
             }
             
-        case NSStreamEvent.EndEncountered:
+        case Stream.Event.endEncountered:
             print("input stream: .EndEncountered")
-        case NSStreamEvent.ErrorOccurred:
+        case Stream.Event.errorOccurred:
             print("input stream: .ErrorEncountered")
-        case NSStreamEvent.HasSpaceAvailable:
+        case Stream.Event.hasSpaceAvailable:
             print("input stream: .HasSpaceAvailable")
-        case NSStreamEvent.None:
+        case Stream.Event():
             print("input stream: .None")
         default:
             print("input stream: unknown event \(eventCode)")
         }
     }
     
-    func warn(description: String)
+    func warn(_ description: String)
     {
         NSLog("**** WARNING:  \(description)")
     }
     
-    func warnIf(condition: Bool, _ description: String) {
+    func warnIf(_ condition: Bool, _ description: String) {
         if !condition { return }
         
         warn(description)
     }
 
     // MARK: Response Parser Delegate
-    func errorParsingResponse(error: String?) {
+    func errorParsingResponse(_ error: String?) {
         var message = "Could not parse response received"
         if error != nil {
             message += "(" + error! + ")"
@@ -237,7 +248,7 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
         print("RedisConnection: parse operation aborted")
     }
     
-    func receivedResponse(response: RedisResponse) {
+    func receivedResponse(_ response: RedisResponse) {
         if let cmd = pendingCommand {
             if cmd.finishWhenResponseReceived {
                 pendingCommand = nil
@@ -250,44 +261,44 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
     }
 
     
-    func handleOutputStreamEvent(eventCode: NSStreamEvent)
+    func handleOutputStreamEvent(_ eventCode: Stream.Event)
     {
         switch(eventCode)
         {
-        case NSStreamEvent.OpenCompleted:
-            warnIf(connectionState != .Closed, "OutputStream .OpenCompleted when connectionState is \(connectionState)")
+        case Stream.Event.openCompleted:
+            warnIf(connectionState != .closed, "OutputStream .OpenCompleted when connectionState is \(connectionState)")
             
             // mark the current state as "Unauthenticated", so that when the 
             // output stream is ready for writing, we'll send the authentication command
-            connectionState = .Ready
+            connectionState = .ready
             delegate?.connected()
             
-        case NSStreamEvent.HasSpaceAvailable:
+        case Stream.Event.hasSpaceAvailable:
             
             // the action to take depends on the state
             switch connectionState {
-            case .Closed:
+            case .closed:
                 warn("OutputStream - HasSpaceAvailable when state is .Closed")
 
-            case .Ready:
+            case .ready:
                 sendPendingDataIfPossible()
                 
-            case .Error:
+            case .error:
                 assert(false)
             }
-        case NSStreamEvent.OpenCompleted:
+        case Stream.Event.openCompleted:
             // nothing to do here
             print("output stream: .OpenCompleted")
-        case NSStreamEvent.HasBytesAvailable:
+        case Stream.Event.hasBytesAvailable:
             print("output stream: .HasBytesAvaialable")
-        case NSStreamEvent.EndEncountered:
+        case Stream.Event.endEncountered:
             print("output stream: .EndEncountered")
-        case NSStreamEvent.ErrorOccurred:
+        case Stream.Event.errorOccurred:
             print("output stream: .ErrorEncountered")
-        case NSStreamEvent.HasSpaceAvailable:
+        case Stream.Event.hasSpaceAvailable:
             print("output stream: .HasSpaceAvailable")
             sendPendingDataIfPossible()
-        case NSStreamEvent.None:
+        case Stream.Event():
             print("output stream: .None")
         default:
             warn("output stream: unknown event \(eventCode)")
@@ -309,8 +320,8 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
             if outputStream?.hasSpaceAvailable == true {
                 if let data = command.getCommandString() {
                     command.sent = true
-                    print("sending command string: \(String(data: data, encoding: NSUTF8StringEncoding))")
-                    outputStream?.write(UnsafePointer<UInt8>(data.bytes), maxLength: data.length)
+                    print("sending command string: \(String(data: data as Data, encoding: String.Encoding.utf8))")
+                    outputStream?.write((data as NSData).bytes.bindMemory(to: UInt8.self, capacity: data.count), maxLength: data.count)
                 } else {
                     warn("could not get command string from pendingCommand")
                 }
@@ -324,7 +335,7 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
     // MARK: Redis Commands
     
     
-    func setPendingCommand(command: RedisCommand)
+    func setPendingCommand(_ command: RedisCommand)
     {
         assert(pendingCommand == nil)
        
@@ -339,33 +350,33 @@ class RedisConnection : NSObject, NSStreamDelegate, RedisResponseParserDelegate
 
 // MARK: Utility functions for debugging
 
-func statusAsString(status: NSStreamStatus) -> String {
+func statusAsString(_ status: Stream.Status) -> String {
     switch(status) {
-    case .Closed: return "Closed"
-    case .AtEnd: return "AtEnd"
-    case .Error: return "Error"
-    case .NotOpen: return "NotOpen"
-    case .Open: return "Open"
-    case .Opening: return "Opening"
-    case .Reading: return "Reading"
-    case .Writing: return "Writing"
+    case .closed: return "Closed"
+    case .atEnd: return "AtEnd"
+    case .error: return "Error"
+    case .notOpen: return "NotOpen"
+    case .open: return "Open"
+    case .opening: return "Opening"
+    case .reading: return "Reading"
+    case .writing: return "Writing"
     }
 }
 
-func statusAsString(status: CFStreamStatus) -> String {
+func statusAsString(_ status: CFStreamStatus) -> String {
     switch(status) {
-    case .Closed: return "Closed"
-    case .AtEnd: return "AtEnd"
-    case .Error: return "Error"
-    case .NotOpen: return "NotOpen"
-    case .Open: return "Open"
-    case .Opening: return "Opening"
-    case .Reading: return "Reading"
-    case .Writing: return "Writing"
+    case .closed: return "Closed"
+    case .atEnd: return "AtEnd"
+    case .error: return "Error"
+    case .notOpen: return "NotOpen"
+    case .open: return "Open"
+    case .opening: return "Opening"
+    case .reading: return "Reading"
+    case .writing: return "Writing"
     }
 }
 
-func statusOfStreamAsString(stream: NSStream?) -> String
+func statusOfStreamAsString(_ stream: Stream?) -> String
 {
     if stream == nil { return "<stream is nil>" }
     return statusAsString(stream!.streamStatus)

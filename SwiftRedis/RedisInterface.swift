@@ -41,13 +41,13 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
         c.disconnect()
     }
     
-    func addCommandToQueue(command: RedisCommand)
+    func addCommandToQueue(_ command: RedisCommand)
     {
         commandQueue.append(command)
         sendNextCommandIfPossible()
     }
     
-    func skipPendingCommandsAndQuit(completionHandler: RedisCommand.VoidCompletionHandler? )
+    func skipPendingCommandsAndQuit(_ completionHandler: RedisCommand.VoidCompletionHandler? )
     {
         if commandQueue.count > 0 {
             print("RedisInterface -- skipPendingCommandsAndQuit: removing \(commandQueue.count) pending commands from redis queue")
@@ -65,7 +65,7 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
         
         if currentCommand != nil { return }
         
-        currentCommand = commandQueue.removeAtIndex(0)
+        currentCommand = commandQueue.remove(at: 0)
         currentCommand?.delegate = self
         
         print("sending next command: \(currentCommand)")
@@ -80,7 +80,7 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
     
     // MARK: RedisConnectionDelegate functions
     
-    func connectionError(error: String) {
+    func connectionError(_ error: String) {
         print("RedisInterface: connection error \(error)")
         isConnected = false
     }
@@ -92,61 +92,61 @@ class RedisInterface : RedisCommandDelegate, RedisConnectionDelegate
             if !success {
                 self.authenticationFailed()
             }
-        }), atIndex: 0)
+        }), at: 0)
         
         sendNextCommandIfPossible()
     }
     
     // MARK: RedisCommandDelegate functions
 
-    func commandExecuted(cmd: RedisCommand) {
+    func commandExecuted(_ cmd: RedisCommand) {
         self.currentCommand = nil
         sendNextCommandIfPossible()
     }
     
-    func commandFailed(cmd: RedisCommand) {
+    func commandFailed(_ cmd: RedisCommand) {
         self.currentCommand = nil
         sendNextCommandIfPossible()
     }
 
     // MARK: operational interface
     
-    func setDataForKey(key: String, data: NSData, completionHandler: RedisCommand.VoidCompletionHandler? )
+    func setDataForKey(_ key: String, data: Data, completionHandler: RedisCommand.VoidCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Set(key, valueToSet: data, handler: completionHandler))
     }
     
-    func setValueForKey(key: String, stringValue: String, completionHandler: RedisCommand.VoidCompletionHandler? )
+    func setValueForKey(_ key: String, stringValue: String, completionHandler: RedisCommand.VoidCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Set(key, valueToSet: stringValue, handler: completionHandler))
     }
     
-    func getDataForKey(key: String, completionHandler: RedisCommand.ValueCompletionHandler? )
+    func getDataForKey(_ key: String, completionHandler: RedisCommand.ValueCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Get(key, handler: completionHandler))
     }
     
-    func getValueForKey(key: String, completionHandler: RedisCommand.ValueCompletionHandler? )
+    func getValueForKey(_ key: String, completionHandler: RedisCommand.ValueCompletionHandler? )
     {
         getDataForKey(key, completionHandler: completionHandler)
     }
     
-    func subscribe(channel: String, completionHandler: RedisCommand.ValueCompletionHandler? )
+    func subscribe(_ channel: String, completionHandler: RedisCommand.ValueCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Subscribe(channel, handler: completionHandler))
     }
 
-    func publish(channel: String, value: String, completionHandler: RedisCommand.ValueCompletionHandler? )
+    func publish(_ channel: String, value: String, completionHandler: RedisCommand.ValueCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Publish(channel, value: value, handler: completionHandler))
     }
     
-    func generic(cmd: String, _ arg1: String? = nil, _ arg2: String? = nil, _ arg3: String? = nil, _ arg4: String? = nil, completionHandler: RedisCommand.ValueCompletionHandler?)
+    func generic(_ cmd: String, _ arg1: String? = nil, _ arg2: String? = nil, _ arg3: String? = nil, _ arg4: String? = nil, completionHandler: RedisCommand.ValueCompletionHandler?)
     {
         addCommandToQueue(RedisCommand.Generic(cmd, arg1, arg2, arg3, arg4, handler: completionHandler))
     }
     
-    func quit(completionHandler: RedisCommand.VoidCompletionHandler? )
+    func quit(_ completionHandler: RedisCommand.VoidCompletionHandler? )
     {
         addCommandToQueue(RedisCommand.Quit(completionHandler))
     }
