@@ -106,7 +106,7 @@ class RedisResponseParser: RedisResponseParserDelegate
     var processingComplete = false
     
     // function returns true if managed to complete processing, false otherwise
-    func processAccumulatedData() -> Bool
+    @discardableResult func processAccumulatedData() -> Bool
     {
         processingComplete = false
         
@@ -252,6 +252,6 @@ class RedisResponseParser: RedisResponseParserDelegate
     
     func storeReceivedString(_ str: String)
     {
-        storeReceivedData(str.data(using: String.Encoding.utf8)!)
+        return storeReceivedData(str.data(using: String.Encoding.utf8)!)
     }
 }

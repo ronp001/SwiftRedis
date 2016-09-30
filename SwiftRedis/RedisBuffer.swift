@@ -30,6 +30,18 @@ class RedisBuffer
     
     func removeBytesFromBuffer(_ numBytesToRemove: Int)
     {
+        let data = dataAccumulatedFromStream!.subdata(in: numBytesToRemove ..< dataAccumulatedFromStream!.count)
+
+        if data.count == 0 {
+            dataAccumulatedFromStream = nil
+        } else {
+            dataAccumulatedFromStream = data
+        }
+    }
+    
+/* Swift 2 syntax:
+    func removeBytesFromBuffer(_ numBytesToRemove: Int)
+    {
         let len = dataAccumulatedFromStream!.count - numBytesToRemove
         
         let range = NSMakeRange(numBytesToRemove, len)
@@ -41,8 +53,25 @@ class RedisBuffer
             dataAccumulatedFromStream = data
         }
     }
+*/
     
+    func getNextDataOfSize(_ size: Int?) -> Data?
+    {
+        if size == nil { return getNextDataUntilCRLF() }
+        
+        if dataAccumulatedFromStream == nil { return nil }
+        if dataAccumulatedFromStream!.count < size! {
+            return nil
+        }
+        
+        let data = dataAccumulatedFromStream!.subdata(in: 0 ..< size! )
+        
+        removeBytesFromBuffer(size!)
+        
+        return data
+    }
     
+/* Swift 2 syntax:
     func getNextDataOfSize(_ size: Int?) -> Data?
     {
         if size == nil { return getNextDataUntilCRLF() }
@@ -59,6 +88,7 @@ class RedisBuffer
         
         return data
     }
+*/
     
     func getNextStringOfSize(_ size: Int) -> String?
     {

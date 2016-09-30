@@ -380,7 +380,7 @@ class RedisParserTests: XCTestCase {
         r = RedisResponse(dataVal: Data())
         XCTAssert(r.responseType == .data)
         
-        r = RedisResponse(dataVal: NSMutableData())
+        r = RedisResponse(dataVal: NSMutableData() as Data)
         XCTAssert(r.responseType == .data)
         
         r = RedisResponse(arrayVal: [RedisResponse(intVal: 1), RedisResponse(stringVal: "hi")])

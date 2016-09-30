@@ -21,13 +21,13 @@ class RedisCommand : CustomStringConvertible
         return "RedisCommand(\(commandType))"
     }
     
-    enum Type { case get, set, auth, publish, subscribe, quit, generic }
+    enum OperationType { case get, set, auth, publish, subscribe, quit, generic }
     typealias ValueCompletionHandler = (_ success: Bool, _ key: String, _ result: RedisResponse?, _ cmd: RedisCommand) -> Void
     typealias VoidCompletionHandler = (_ success: Bool, _ cmd: RedisCommand) -> Void
     
     var sent = false // connection object sets this to true when the command is sent
     
-    let commandType: Type
+    let commandType: OperationType
     var param1: String?
     var param2: Data?
     var additionalParams: [String?]?
@@ -39,7 +39,7 @@ class RedisCommand : CustomStringConvertible
     var key: String? { get { return param1 }  set(value) { param1 = value } }
     var valueToSet: Data? { get { return param2 } set(value) {param2 = value} }
     
-    init(type: Type, param1: String? = nil, param2: Data? = nil, valueCompletionHandler: ValueCompletionHandler? = nil, voidCompletionHandler: VoidCompletionHandler? = nil, additionalParams: [String?]? = nil )
+    init(type: OperationType, param1: String? = nil, param2: Data? = nil, valueCompletionHandler: ValueCompletionHandler? = nil, voidCompletionHandler: VoidCompletionHandler? = nil, additionalParams: [String?]? = nil )
     {
         self.commandType = type
         self.param1 = param1

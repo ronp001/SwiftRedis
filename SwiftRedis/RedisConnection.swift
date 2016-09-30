@@ -6,7 +6,11 @@
 //  Copyright © 2015 ronp001. All rights reserved.
 //
 
+
+
 import UIKit
+
+/*
 fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
   switch (lhs, rhs) {
   case let (l?, r?):
@@ -17,7 +21,7 @@ fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
     return false
   }
 }
-
+*/
 
 
 
@@ -104,8 +108,8 @@ class RedisConnection : NSObject, StreamDelegate, RedisResponseParserDelegate
         disconnect()
     }
     
+    
     func connect() {
-        
         print("input stream: \(statusOfStreamAsString(inputStream))   output stream: \(statusOfStreamAsString(outputStream))")
         
         if !inputStreamRequiresOpening(self.inputStream) && !outputStreamRequiresOpening(self.outputStream) {
@@ -134,16 +138,17 @@ class RedisConnection : NSObject, StreamDelegate, RedisResponseParserDelegate
         
         self.inputStream!.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
         self.outputStream!.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-
+         /***
         if enableSSL {
             self.inputStream?.setProperty(StreamSocketSecurityLevel.negotiatedSSL, forKey: Stream.PropertyKey.socketSecurityLevelKey)
             self.outputStream?.setProperty(StreamSocketSecurityLevel.negotiatedSSL, forKey: Stream.PropertyKey.socketSecurityLevelKey)
         }
-        
+         ***/
+ 
         self.inputStream!.open()
         self.outputStream!.open()
     }
-
+    
     // keep track of the connection to the web service
     enum ConnectionState { case closed, ready, error }
     var connectionState: ConnectionState = .closed
@@ -156,8 +161,32 @@ class RedisConnection : NSObject, StreamDelegate, RedisResponseParserDelegate
             assert(false)
         }
     }
-
+/****
+    func readData(_ maxBytes: Int = 1024) -> Data?
+    {
+        return nil
+    }
+****/
+    func readData(_ maxBytes: Int = 1024) -> Data?
+    {
+        //let data = Data(capacity: maxBytes)
+        let data = NSMutableData(length: maxBytes)!
+        let op = OpaquePointer(data.mutableBytes)
+        let bytes = UnsafeMutablePointer<UInt8>(op)
+        
+        print("readData: reading up to \(maxBytes) from stream")
+        let length = inputStream?.read(bytes, maxLength: maxBytes)
+        print("readData: read \(length) bytes")
+        if length == nil || length! < 0 {
+            return nil
+        }
+        
+        data.length = length!
+        
+        return data as Data
+    }
     
+    /* Swift 2 syntax:
     func readData(_ maxBytes: Int = 1024) -> Data?
     {
         let data = NSMutableData(length: maxBytes)!
@@ -173,7 +202,7 @@ class RedisConnection : NSObject, StreamDelegate, RedisResponseParserDelegate
         
         return data as Data
     }
-    
+    */
     
     func error(_ message: String)
     {
