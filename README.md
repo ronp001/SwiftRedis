@@ -2,7 +2,7 @@
 
 # SwiftRedis
 
-A preliminary version of an asynchronous iOS Redis client written in Swift 2.
+Asynchronous Redis client in Swift 3.
 
 Currently supports the following:
 * Asynchronous operation
