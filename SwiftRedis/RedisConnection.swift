@@ -349,8 +349,18 @@ class RedisConnection : NSObject, StreamDelegate, RedisResponseParserDelegate
             if outputStream?.hasSpaceAvailable == true {
                 if let data = command.getCommandString() {
                     command.sent = true
-                    print("sending command string: \(String(data: data as Data, encoding: String.Encoding.utf8))")
-                    outputStream?.write((data as NSData).bytes.bindMemory(to: UInt8.self, capacity: data.count), maxLength: data.count)
+                    print("sending command string (showing up to 100 bytes): \(String(data: data.subdata(in: 0 ..< min(100,data.count)) as Data, encoding: String.Encoding.utf8))")
+                    //print("sending command string: \(String(data: data as Data, encoding: String.Encoding.utf8))")
+                    
+                    let chunk_size = 10000
+                    let num_chunks = (data.count / chunk_size)+1
+                    print("splitting into \(num_chunks) chunks of up to \(chunk_size) bytes")
+                    for i in 0..<num_chunks {
+                        let buf = data.subdata(in: (i*chunk_size)..<min(data.count,(i+1)*chunk_size))
+                        print("sending chunk #\(i) (\(buf.count) bytes): \(String(data: buf.subdata(in: 0 ..< min(100,buf.count)) as Data, encoding: String.Encoding.utf8))")
+                        outputStream?.write((buf as NSData).bytes.bindMemory(to: UInt8.self, capacity: buf.count), maxLength: buf.count)
+                    }
+                    //outputStream?.write((data as NSData).bytes.bindMemory(to: UInt8.self, capacity: data.count), maxLength: data.count)
                 } else {
                     warn("could not get command string from pendingCommand")
                 }

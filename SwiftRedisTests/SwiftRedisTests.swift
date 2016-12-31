@@ -50,7 +50,7 @@ class RedisInterfaceTests: XCTestCase
             doneExpectation.fulfill()
         })
         
-        waitForExpectations(timeout: 2, handler: { error in
+        waitForExpectations(timeout: 10, handler: { error in
             XCTAssert(quitComplete)
         })
     }
@@ -62,36 +62,38 @@ class RedisInterfaceTests: XCTestCase
         
         r.connect()
         
-        let data1 = "hi".data(using: String.Encoding.utf8)!
+        let arr = [UInt8](repeating: 6, count: 230*1024)
+        let data1 = Data(bytes: arr)
+        let data3 = "hi".data(using: String.Encoding.utf8)!
         let data2 = "hello, world".data(using: String.Encoding.utf8)!
         
         
         // store data1
         let storedExpectation1 = expectation(description: "testkey1 stored")
-        r.setDataForKey("testkey1", data: data1, completionHandler: { success, cmd in
+        r.setDataForKey("testkey-getset", data: data1, completionHandler: { success, cmd in
             XCTAssertTrue(success, "expecting success storing data for testkey1")
             storedExpectation1.fulfill()
         })
-        waitForExpectations(timeout: 2, handler: { error in
+        waitForExpectations(timeout: 20, handler: { error in
             XCTAssertNil(error, "expecting operation to succeed")
         })
         
         // retrieve data1
         let storedExpectation2 = expectation(description: "testkey1 retrieved")
-        r.getDataForKey("testkey1", completionHandler: { success, key, data, cmd in
+        r.getDataForKey("testkey-getset", completionHandler: { success, key, data, cmd in
             storedExpectation2.fulfill()
             XCTAssertTrue(success)
-            XCTAssert(key == "testkey1")
+            XCTAssert(key == "testkey-getset")
             XCTAssert(data! == RedisResponse(dataVal: data1))
         })
-        waitForExpectations(timeout: 2, handler: { error in
+        waitForExpectations(timeout: 20, handler: { error in
             XCTAssertNil(error, "expecting operation to succeed")
         })
         
         
         // store data2
         let storedExpectation3 = expectation(description: "testkey2 stored")
-        r.setDataForKey("testkey2", data: data2, completionHandler: { success, cmd in
+        r.setDataForKey("testkey-getset", data: data2, completionHandler: { success, cmd in
             XCTAssertTrue(success, "could not store testkey2")
             storedExpectation3.fulfill()
         })
@@ -101,17 +103,41 @@ class RedisInterfaceTests: XCTestCase
         
         // retrieve data2
         let storedExpectation4 = expectation(description: "testkey2 stored")
-        r.getDataForKey("testkey2", completionHandler: { success, key, data, cmd in
+        r.getDataForKey("testkey-getset", completionHandler: { success, key, data, cmd in
             storedExpectation4.fulfill()
             XCTAssertTrue(success)
-            XCTAssert(key == "testkey2")
+            XCTAssert(key == "testkey-getset")
             XCTAssert(data! == RedisResponse(dataVal: data2))
         })
         waitForExpectations(timeout: 5, handler: { error in
             XCTAssertNil(error, "Error")
         })
+      
         
+        // store data3
+        let storedExpectation_d3a = expectation(description: "testkey3 stored")
+        r.setDataForKey("testkey-getset", data: data3, completionHandler: { success, cmd in
+            XCTAssertTrue(success, "could not store testkey3")
+            storedExpectation_d3a.fulfill()
+        })
+        waitForExpectations(timeout: 5, handler: { error in
+            XCTAssertNil(error, "Error")
+        })
         
+        // retrieve data3
+        let storedExpectation_d3b = expectation(description: "testkey3 stored")
+        r.getDataForKey("testkey-getset", completionHandler: { success, key, data, cmd in
+            storedExpectation_d3b.fulfill()
+            XCTAssertTrue(success)
+            XCTAssert(key == "testkey-getset")
+            XCTAssert(data! == RedisResponse(dataVal: data3))
+        })
+        waitForExpectations(timeout: 5, handler: { error in
+            XCTAssertNil(error, "Error")
+        })
+        
+
+        // quit
         let storedExpectation5 = expectation(description: "quit complete")
         r.quit({ success in
             storedExpectation5.fulfill()
@@ -119,6 +145,9 @@ class RedisInterfaceTests: XCTestCase
         waitForExpectations(timeout: 5, handler: { error in
             XCTAssertNil(error, "Error")
         })
+        
+        
+        
     }
     
     
