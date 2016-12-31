@@ -1,6 +1,8 @@
+[![Swift 3.0](https://img.shields.io/badge/Swift-3.0-green.svg?style=flat)](https://swift.org)
+
 # SwiftRedis
 
-A preliminary version of an asynchronous iOS Redis client written in Swift 2.
+Asynchronous Redis client in Swift 3.
 
 Currently supports the following:
 * Asynchronous operation
